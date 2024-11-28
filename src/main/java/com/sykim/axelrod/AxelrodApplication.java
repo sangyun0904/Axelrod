@@ -10,25 +10,7 @@ import java.util.List;
 
 @SpringBootApplication
 public class AxelrodApplication {
-
-	private static AccountRepository accountRepository;
-
-	@Autowired
-	public AxelrodApplication(AccountRepository accountRepository) {
-		AxelrodApplication.accountRepository = accountRepository;
-	}
-
 	public static void main(String[] args) {
 		SpringApplication.run(AxelrodApplication.class, args);
-
-		List<Account> accountList = accountRepository.findAll();
-
-		if (accountList.isEmpty()) {
-			Account account = Account.builder()
-					.balance(1e7d)
-					.build();
-
-			Account savedAccount = accountRepository.save(account);
-		}
 	}
 }
