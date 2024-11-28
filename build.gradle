@@ -32,6 +32,8 @@ dependencies {
 
 	// postgresql
 	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'com.opentable.components:otj-pg-embedded:1.0.3'
+
 }
 
 tasks.named('test') {
