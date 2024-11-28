@@ -1,13 +1,12 @@
 package com.sykim.axelrod.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Builder
@@ -20,6 +19,7 @@ public class Stock {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long stock_id;
     // stock symbol
+    @Column(unique=true)
     private String ticker;
     private String name;
     // e.g. NASDAQ
@@ -27,4 +27,5 @@ public class Stock {
     // industry sector e.g. Manufacture
     private String sector;
     private Double price;
+    private LocalDateTime timeStamp;
 }
