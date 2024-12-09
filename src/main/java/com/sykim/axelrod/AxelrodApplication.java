@@ -10,6 +10,7 @@ import java.util.List;
 
 @SpringBootApplication
 public class AxelrodApplication {
+
 	public static void main(String[] args) {
 		SpringApplication.run(AxelrodApplication.class, args);
 	}

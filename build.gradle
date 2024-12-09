@@ -34,6 +34,9 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'com.opentable.components:otj-pg-embedded:1.0.3'
 
+	// redis
+	implementation 'redis.clients:jedis:5.2.0'
+
 }
 
 tasks.named('test') {
