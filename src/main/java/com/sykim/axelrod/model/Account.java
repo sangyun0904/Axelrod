@@ -20,7 +20,7 @@ public class Account {
     private Long id;
     private Double balance;
     private String username;
-    private String account_num;
+    private String accountNum;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

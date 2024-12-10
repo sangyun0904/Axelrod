@@ -16,9 +16,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Portfolio {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long portfolio_id;
-    private String user_id;
-    private Long stock_id;
+    private Long portfolioId;
+    private String userId;
+    private Long stockId;
     private Long quantity;
-    private Double average_price;
+    private Double averagePrice;
+
+    public record CreatePortfolio(String userId, String ticker, Long quantity, Double price) {}
 }
