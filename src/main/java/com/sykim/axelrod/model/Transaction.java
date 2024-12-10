@@ -9,16 +9,24 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Portfolio {
+public class Transaction {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String userId;
     private Long stockId;
     private Long quantity;
-    private Double averagePrice;
+    private Double price;
+    private Type type;
+    private LocalDate transactionDate;
+
+    public enum Type { SELL, BUY, ISSUE }
+
+    public record StockIssuance(String userId, String ticker, Long quantity, Double price) {}
 }
