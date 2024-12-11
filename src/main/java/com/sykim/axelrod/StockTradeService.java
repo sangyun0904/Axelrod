@@ -2,6 +2,7 @@ package com.sykim.axelrod;
 
 import com.sykim.axelrod.model.Portfolio;
 import com.sykim.axelrod.model.Stock;
+import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
 import com.sykim.axelrod.repository.PlayerRepository;
 import com.sykim.axelrod.repository.PortfolioRepository;
@@ -12,8 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLDataException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -29,9 +30,8 @@ public class StockTradeService {
     private TransactionRepository transactionRepository;
 
     @Transactional
-    public Transaction createStock(StockIssuance issuance) {
+    public Transaction issueStock(StockIssuance issuance) {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(issuance.ticker());
-
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
@@ -52,5 +52,11 @@ public class StockTradeService {
 //            throw new SQLDataException("Stock with " + ticker + " ticker doesn't exists");
         }
         return null;
+    }
+
+    @Transactional
+    public Stock createStock(StockCreate stock) {
+        Stock newStock = new Stock(null, stock.ticker(), stock.name(), stock.market(), stock.sector(), stock.price(), LocalDateTime.now());
+        return stockRepository.save(newStock);
     }
 }

@@ -28,4 +28,6 @@ public class Stock {
     private String sector;
     private Double price;
     private LocalDateTime timeStamp;
+
+    public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
 }
