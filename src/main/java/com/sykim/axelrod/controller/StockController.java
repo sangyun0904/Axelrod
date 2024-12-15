@@ -2,6 +2,7 @@ package com.sykim.axelrod.controller;
 
 
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
@@ -16,6 +17,8 @@ public class StockController {
 
     @Autowired
     private StockTradeService stockTradeService;
+    @Autowired
+    private MatchingService matchingService;
 
     @PostMapping("/issue")
     public Transaction issueStocks(
@@ -30,4 +33,12 @@ public class StockController {
     ) {
         return stockTradeService.createStock(stock);
     }
+
+//    @PostMapping("/order")
+//    public void orderStock() {
+//        matchingService.bookStockOrder(
+//
+//        );
+//    }
+
 }
