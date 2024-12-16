@@ -6,11 +6,14 @@ import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
-import com.sykim.axelrod.model.Transaction.StockIssuance;
+import com.sykim.axelrod.model.Transaction.TransactionOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.sql.SQLDataException;
 
 @RestController
 public class StockController {
@@ -22,7 +25,7 @@ public class StockController {
 
     @PostMapping("/issue")
     public Transaction issueStocks(
-            @RequestBody StockIssuance issuance
+            @RequestBody TransactionOrder issuance
     ) {
         return stockTradeService.issueStock(issuance);
     }
@@ -34,11 +37,16 @@ public class StockController {
         return stockTradeService.createStock(stock);
     }
 
-//    @PostMapping("/order")
-//    public void orderStock() {
-//        matchingService.bookStockOrder(
-//
-//        );
+    @GetMapping("/match")
+    public boolean matchingOrder() {
+        return matchingService.matching("005930");
+    }
+
+//    @PostMapping("/order/buy")
+//    public Transaction crateBuyStockOrder(
+//            @RequestBody TransactionOrder transactionOrder
+//    ) throws SQLDataException {
+//        return stockTradeService.createTransaction(transactionOrder, Transaction.Type.BUY);
 //    }
 
 }

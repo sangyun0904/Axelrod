@@ -5,3 +5,7 @@
 - 키 : orderbook.{buy:sell}.{ticker} - string 
 - value : {"orderId":UUId, "quantity":100, "price":20000.00}
 - score : price - double
+- algorithm : Price/Time algorithm - 추후에 여러 알고리즘 비교 예정
+
+(출처 : Order matching system Wikipedia)
+![img.png](img.png)

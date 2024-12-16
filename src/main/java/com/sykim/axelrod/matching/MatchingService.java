@@ -8,6 +8,7 @@ import com.sykim.axelrod.repository.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.resps.Tuple;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -20,10 +21,10 @@ public class MatchingService {
     @Autowired
     private PlayerRepository playerRepository;
 
+    private String REDIS_HOST = "localhost"; // Redis 호스트 주소
+    private int REDIS_PORT = 6379;           // Redis 포트 번호
+
     public void bookStockOrder(String userId, String ticker, String orderType, Double price, int quantity) {
-        // Redis 연결 설정
-        String redisHost = "localhost"; // Redis 호스트 주소
-        int redisPort = 6379;          // Redis 포트 번호
 
         Optional<Stock> stockOptional = stockRepository.findByTicker(ticker);
         if (stockOptional.isEmpty()) throw new RuntimeException("ticker : " + ticker + " 의 주식이 존재하지 않습니다.");
@@ -35,7 +36,7 @@ public class MatchingService {
         else if (Transaction.Type.valueOf(orderType.toUpperCase())==Transaction.Type.SELL) type = "sell";
         else throw new RuntimeException("order type 이 올바르지 않습니다.");
 
-        try (Jedis jedis = new Jedis(redisHost, redisPort)) {
+        try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
             System.out.println("Connected to Redis!");
 
             // Redis 키: orderbook:type:<ticker>
@@ -50,6 +51,17 @@ public class MatchingService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean matching(String ticker) {
+        String sellKey = "orderbook:sell:" + ticker;
+        String buyKey  = "orderbook:buy:" + ticker;
+        try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
+            Tuple minPriceBuyOrder = jedis.zrangeWithScores(buyKey, 0, 0).getFirst();
+            System.out.println(minPriceBuyOrder);
+        }
+
+        return true;
     }
 
 }
