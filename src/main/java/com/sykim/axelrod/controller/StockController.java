@@ -42,11 +42,20 @@ public class StockController {
         return matchingService.matching("005930");
     }
 
-//    @PostMapping("/order/buy")
-//    public Transaction crateBuyStockOrder(
-//            @RequestBody TransactionOrder transactionOrder
-//    ) throws SQLDataException {
-//        return stockTradeService.createTransaction(transactionOrder, Transaction.Type.BUY);
-//    }
+    @PostMapping("/order/buy")
+    public void crateBuyStockOrder(
+            @RequestBody TransactionOrder transactionOrder
+    ) throws SQLDataException {
+        Transaction newTransaction = stockTradeService.createTransaction(transactionOrder, Transaction.Type.BUY);
+        matchingService.bookStockOrder(newTransaction.getId(), transactionOrder.userId(), transactionOrder.ticker(), Transaction.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
+    }
+
+    @PostMapping("/order/sell")
+    public void crateSellStockOrder(
+            @RequestBody TransactionOrder transactionOrder
+    ) throws SQLDataException {
+        Transaction newTransaction = stockTradeService.createTransaction(transactionOrder, Transaction.Type.SELL);
+        matchingService.bookStockOrder(newTransaction.getId(), transactionOrder.userId(), transactionOrder.ticker(), Transaction.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+    }
 
 }

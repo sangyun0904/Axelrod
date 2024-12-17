@@ -31,5 +31,5 @@ public class Transaction {
     public enum Type { SELL, BUY, ISSUE }
     public enum Status { WAITING, COMPLETED }
 
-    public record TransactionOrder(String userId, String ticker, Long quantity, Double price, String transactionType) {}
+    public record TransactionOrder(String userId, String ticker, Long quantity, Double price) {}
 }

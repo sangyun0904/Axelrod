@@ -24,7 +24,7 @@ public class MatchingService {
     private String REDIS_HOST = "localhost"; // Redis 호스트 주소
     private int REDIS_PORT = 6379;           // Redis 포트 번호
 
-    public void bookStockOrder(String userId, String ticker, String orderType, Double price, int quantity) {
+    public void bookStockOrder(Long orderId, String userId, String ticker, Transaction.Type orderType, Double price, Long quantity) {
 
         Optional<Stock> stockOptional = stockRepository.findByTicker(ticker);
         if (stockOptional.isEmpty()) throw new RuntimeException("ticker : " + ticker + " 의 주식이 존재하지 않습니다.");
@@ -32,8 +32,8 @@ public class MatchingService {
         if (playerOptional.isEmpty()) throw new RuntimeException("user id : " + userId + " 의 사용자가 존재하지 않습니다.");
 
         String type;
-        if (Transaction.Type.valueOf(orderType.toUpperCase())==Transaction.Type.BUY) type = "buy";
-        else if (Transaction.Type.valueOf(orderType.toUpperCase())==Transaction.Type.SELL) type = "sell";
+        if (orderType==Transaction.Type.BUY) type = "buy";
+        else if (orderType==Transaction.Type.SELL) type = "sell";
         else throw new RuntimeException("order type 이 올바르지 않습니다.");
 
         try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
@@ -41,8 +41,6 @@ public class MatchingService {
 
             // Redis 키: orderbook:type:<ticker>
             String orderKey = "orderbook:" + type + ":" + ticker;
-
-            UUID orderId = UUID.randomUUID();
 
             // ZADD 명령으로 매수/매도 주문 추가
             jedis.zadd(orderKey, price, "{\"orderId\":\"" + orderId + "\",\"quantity\":" + quantity + ",\"userId\":\"" + userId + "\"}");
