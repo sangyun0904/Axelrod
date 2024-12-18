@@ -1,6 +1,7 @@
 package com.sykim.axelrod.matching;
 
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,11 +32,20 @@ public class MatchingExecutorPool {
         JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
         for (String t: tickerList) {
             try (Jedis jedis = jedisPool.getResource()) {
-                List<Tuple> buyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, 0, -1);
+                Tuple buyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, 0, 0).getFirst();
                 System.out.println(buyOrder);
+                List<Tuple> sellOrdersByScore = jedis.zrangeByScoreWithScores("orderbook:sell:" + t, buyOrder.getScore(), buyOrder.getScore());
+                Transaction transaction = matchTransaction(buyOrder, sellOrdersByScore);
             }
             break;
         }
         return true;
+    }
+
+    private Transaction matchTransaction(Tuple buyOrder, List<Tuple> SellOrderList) {
+        // TODO : - 주식 판매 수량이 구매 수량 보다 적으면 null 리턴
+        //        - 판매 수량이 같거나 더 많으면 Transaction 생성 및 Player Portfolio 수정 후 Transaction 리턴
+
+        return null;
     }
 }
