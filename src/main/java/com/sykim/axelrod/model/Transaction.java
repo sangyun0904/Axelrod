@@ -32,4 +32,5 @@ public class Transaction {
     public enum Status { WAITING, COMPLETED }
 
     public record TransactionOrder(String userId, String ticker, Long quantity, Double price) {}
+    public record RedisOrder(Long orderId, Long quantity, String userId) {}
 }

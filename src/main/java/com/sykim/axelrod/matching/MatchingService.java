@@ -22,9 +22,9 @@ public class MatchingService {
     @Autowired
     private PlayerRepository playerRepository;
 
-    @Value("${spring.redis.host")
+    @Value("${spring.redis.host}")
     private String REDIS_HOST; // Redis 호스트 주소
-    @Value("${spring.redis.port")
+    @Value("${spring.redis.port}")
     private int REDIS_PORT;           // Redis 포트 번호
 
     public void bookStockOrder(Long orderId, String userId, String ticker, Transaction.Type orderType, Double price, Long quantity) {
