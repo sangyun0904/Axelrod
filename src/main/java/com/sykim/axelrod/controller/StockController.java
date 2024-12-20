@@ -3,6 +3,7 @@ package com.sykim.axelrod.controller;
 
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.matching.MatchingService;
+import com.sykim.axelrod.model.Order;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
@@ -46,16 +47,16 @@ public class StockController {
     public void crateBuyStockOrder(
             @RequestBody TransactionOrder transactionOrder
     ) throws SQLDataException {
-        Transaction newTransaction = stockTradeService.createTransaction(transactionOrder, Transaction.Type.BUY);
-        matchingService.bookStockOrder(newTransaction.getId(), transactionOrder.userId(), transactionOrder.ticker(), Transaction.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
+        Order newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, Order.Type.BUY);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), Order.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
     }
 
     @PostMapping("/order/sell")
     public void crateSellStockOrder(
             @RequestBody TransactionOrder transactionOrder
     ) throws SQLDataException {
-        Transaction newTransaction = stockTradeService.createTransaction(transactionOrder, Transaction.Type.SELL);
-        matchingService.bookStockOrder(newTransaction.getId(), transactionOrder.userId(), transactionOrder.ticker(), Transaction.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+        Order newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, Order.Type.SELL);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), Order.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
     }
 
 }

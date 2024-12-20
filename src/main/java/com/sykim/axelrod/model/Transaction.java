@@ -24,12 +24,9 @@ public class Transaction {
     private Long quantity;
     private Double price;
     private Type type;
-    private LocalDate transactionOrderDate;
     private LocalDate transactionDate;
-    private Status status;
 
     public enum Type { SELL, BUY, ISSUE }
-    public enum Status { WAITING, COMPLETED }
 
     public record TransactionOrder(String userId, String ticker, Long quantity, Double price) {}
     public record RedisOrder(Long orderId, Long quantity, String userId) {}

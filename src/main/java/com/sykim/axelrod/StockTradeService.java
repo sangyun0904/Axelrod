@@ -1,14 +1,12 @@
 package com.sykim.axelrod;
 
+import com.sykim.axelrod.model.Order;
 import com.sykim.axelrod.model.Portfolio;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
-import com.sykim.axelrod.repository.PlayerRepository;
-import com.sykim.axelrod.repository.PortfolioRepository;
-import com.sykim.axelrod.repository.StockRepository;
+import com.sykim.axelrod.repository.*;
 import com.sykim.axelrod.model.Transaction.TransactionOrder;
-import com.sykim.axelrod.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +27,8 @@ public class StockTradeService {
     private PortfolioRepository portfolioRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Transactional
     public Transaction issueStock(TransactionOrder issuance) {
@@ -36,7 +36,7 @@ public class StockTradeService {
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            Transaction transaction = new Transaction(null, issuance.userId(), stock.getId(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE,LocalDate.now(), LocalDate.now(), Transaction.Status.COMPLETED);
+            Transaction transaction = new Transaction(null, issuance.userId(), stock.getId(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE, LocalDate.now());
 
             // 플레이어 포트폴리오 업데이트
             Optional<Portfolio> portfolioOrNull = portfolioRepository.findByUserIdAndStockId(issuance.userId(), stock.getId());
@@ -64,13 +64,13 @@ public class StockTradeService {
     }
 
     @Transactional
-    public Transaction createTransaction(TransactionOrder transactionOrder, Transaction.Type type) throws SQLDataException {
+    public Order createTransactionOrder(TransactionOrder transactionOrder, Order.Type type) throws SQLDataException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(transactionOrder.ticker());
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            Transaction transaction = new Transaction(null, transactionOrder.userId(), stock.getId(), transactionOrder.quantity(), transactionOrder.price(), type, LocalDate.now(), null, Transaction.Status.WAITING);
-            return transactionRepository.save(transaction);
+            Order order = new Order(null, transactionOrder.userId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
+            return orderRepository.save(order);
         } else {
             throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
         }
