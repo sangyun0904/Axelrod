@@ -20,7 +20,7 @@ public class Transaction {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String userId;
-    private Long stockId;
+    private String ticker;
     private Long quantity;
     private Double price;
     private Type type;

@@ -35,7 +35,7 @@ public class StockTradeService {
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            Transaction transaction = new Transaction(null, issuance.userId(), stock.getId(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE, LocalDate.now());
+            Transaction transaction = new Transaction(null, issuance.userId(), issuance.ticker(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE, LocalDate.now());
 
             // 플레이어 포트폴리오 업데이트
             Optional<Portfolio> portfolioOrNull = portfolioRepository.findByUserIdAndStockId(issuance.userId(), stock.getId());
@@ -73,5 +73,28 @@ public class StockTradeService {
         } else {
             throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
         }
+    }
+
+    @Transactional
+    public void createTransaction(String ticker, Double price, Long quantity, String sellPlayer, String buyPlayer) {
+        Stock stock = stockRepository.findByTicker(ticker).get();
+
+        Transaction transaction = new Transaction(null, sellPlayer, ticker, quantity, price, Transaction.Type.SELL, LocalDate.now());
+        transactionRepository.save(transaction);
+        transaction = new Transaction(null, buyPlayer, ticker, quantity, price, Transaction.Type.BUY, LocalDate.now());
+        transactionRepository.save(transaction);
+
+        Portfolio sellerPF = portfolioRepository.findByUserIdAndStockId(sellPlayer, stock.getId()).get();
+        Double newPFAvg = (sellerPF.getAveragePrice() * sellerPF.getQuantity() + quantity * price) / (sellerPF.getQuantity() + quantity);
+        Portfolio newPF = new Portfolio(sellerPF.getId(), sellPlayer, stock.getId(), sellerPF.getQuantity() + quantity, newPFAvg);
+        portfolioRepository.save(newPF);
+        Portfolio buyerPF = portfolioRepository.findByUserIdAndStockId(buyPlayer, stock.getId()).get();
+        if (buyerPF.getQuantity() > quantity) {
+            newPFAvg = (buyerPF.getAveragePrice() * buyerPF.getQuantity() + quantity * price) / (buyerPF.getQuantity() + quantity);
+        } else {
+            newPFAvg = 0d;
+        }
+        newPF = new Portfolio(buyerPF.getId(), sellPlayer, stock.getId(), buyerPF.getQuantity() - quantity, newPFAvg);
+        portfolioRepository.save(newPF);
     }
 }
