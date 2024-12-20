@@ -2,6 +2,7 @@ package com.sykim.axelrod.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +14,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
-    @Id @GeneratedValue
+public class TransactionOrder {
+    @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String playerId;
     private String ticker;

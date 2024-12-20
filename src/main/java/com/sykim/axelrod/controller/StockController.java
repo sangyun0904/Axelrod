@@ -3,11 +3,10 @@ package com.sykim.axelrod.controller;
 
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.matching.MatchingService;
-import com.sykim.axelrod.model.Order;
+import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
-import com.sykim.axelrod.model.Transaction.TransactionOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +25,7 @@ public class StockController {
 
     @PostMapping("/issue")
     public Transaction issueStocks(
-            @RequestBody TransactionOrder issuance
+            @RequestBody Transaction.TransactionOrder issuance
     ) {
         return stockTradeService.issueStock(issuance);
     }
@@ -45,18 +44,18 @@ public class StockController {
 
     @PostMapping("/order/buy")
     public void crateBuyStockOrder(
-            @RequestBody TransactionOrder transactionOrder
+            @RequestBody Transaction.TransactionOrder transactionOrder
     ) throws SQLDataException {
-        Order newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, Order.Type.BUY);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), Order.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.BUY);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
     }
 
     @PostMapping("/order/sell")
     public void crateSellStockOrder(
-            @RequestBody TransactionOrder transactionOrder
+            @RequestBody Transaction.TransactionOrder transactionOrder
     ) throws SQLDataException {
-        Order newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, Order.Type.SELL);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), Order.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.SELL);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), TransactionOrder.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
     }
 
 }

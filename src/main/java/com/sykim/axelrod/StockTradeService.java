@@ -1,12 +1,11 @@
 package com.sykim.axelrod;
 
-import com.sykim.axelrod.model.Order;
+import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Portfolio;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
 import com.sykim.axelrod.repository.*;
-import com.sykim.axelrod.model.Transaction.TransactionOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +30,7 @@ public class StockTradeService {
     private OrderRepository orderRepository;
 
     @Transactional
-    public Transaction issueStock(TransactionOrder issuance) {
+    public Transaction issueStock(Transaction.TransactionOrder issuance) {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(issuance.ticker());
 
         if (stockOrNull.isPresent()) {
@@ -64,12 +63,12 @@ public class StockTradeService {
     }
 
     @Transactional
-    public Order createTransactionOrder(TransactionOrder transactionOrder, Order.Type type) throws SQLDataException {
+    public TransactionOrder createTransactionOrder(Transaction.TransactionOrder transactionOrder, TransactionOrder.Type type) throws SQLDataException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(transactionOrder.ticker());
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            Order order = new Order(null, transactionOrder.userId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
+            TransactionOrder order = new TransactionOrder(null, transactionOrder.userId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
             return orderRepository.save(order);
         } else {
             throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");

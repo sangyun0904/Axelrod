@@ -1,9 +1,8 @@
 package com.sykim.axelrod.matching;
 
-import com.sykim.axelrod.model.Order;
+import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
-import com.sykim.axelrod.model.Transaction;
 import com.sykim.axelrod.repository.PlayerRepository;
 import com.sykim.axelrod.repository.StockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.resps.Tuple;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class MatchingService {
@@ -28,7 +26,7 @@ public class MatchingService {
     @Value("${spring.redis.port}")
     private int REDIS_PORT;           // Redis 포트 번호
 
-    public void bookStockOrder(Long orderId, String userId, String ticker, Order.Type orderType, Double price, Long quantity) {
+    public void bookStockOrder(Long orderId, String userId, String ticker, TransactionOrder.Type orderType, Double price, Long quantity) {
 
         Optional<Stock> stockOptional = stockRepository.findByTicker(ticker);
         if (stockOptional.isEmpty()) throw new RuntimeException("ticker : " + ticker + " 의 주식이 존재하지 않습니다.");
@@ -36,8 +34,8 @@ public class MatchingService {
         if (playerOptional.isEmpty()) throw new RuntimeException("user id : " + userId + " 의 사용자가 존재하지 않습니다.");
 
         String type;
-        if (orderType== Order.Type.BUY) type = "buy";
-        else if (orderType== Order.Type.SELL) type = "sell";
+        if (orderType== TransactionOrder.Type.BUY) type = "buy";
+        else if (orderType== TransactionOrder.Type.SELL) type = "sell";
         else throw new RuntimeException("order type 이 올바르지 않습니다.");
 
         try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
