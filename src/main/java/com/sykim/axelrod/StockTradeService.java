@@ -84,11 +84,11 @@ public class StockTradeService {
         transaction = new Transaction(null, buyPlayer, ticker, quantity, price, Transaction.Type.BUY, LocalDate.now());
         transactionRepository.save(transaction);
 
-        Portfolio sellerPF = portfolioRepository.findByUserIdAndStockId(sellPlayer, stock.getId()).get();
+        Portfolio sellerPF = getPortfolioByUserAndStock(sellPlayer, stock.getId());
         Double newPFAvg = (sellerPF.getAveragePrice() * sellerPF.getQuantity() + quantity * price) / (sellerPF.getQuantity() + quantity);
         Portfolio newPF = new Portfolio(sellerPF.getId(), sellPlayer, stock.getId(), sellerPF.getQuantity() + quantity, newPFAvg);
         portfolioRepository.save(newPF);
-        Portfolio buyerPF = portfolioRepository.findByUserIdAndStockId(buyPlayer, stock.getId()).get();
+        Portfolio buyerPF = getPortfolioByUserAndStock(buyPlayer, stock.getId());
         if (buyerPF.getQuantity() > quantity) {
             newPFAvg = (buyerPF.getAveragePrice() * buyerPF.getQuantity() + quantity * price) / (buyerPF.getQuantity() + quantity);
         } else {
@@ -96,5 +96,11 @@ public class StockTradeService {
         }
         newPF = new Portfolio(buyerPF.getId(), sellPlayer, stock.getId(), buyerPF.getQuantity() - quantity, newPFAvg);
         portfolioRepository.save(newPF);
+    }
+
+    @Transactional
+    private Portfolio getPortfolioByUserAndStock(String userId, Long stockId) {
+        Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserIdAndStockId(userId, stockId);
+        return portfolioOptional.orElseGet(() -> portfolioRepository.save(new Portfolio(null, userId, stockId, 0L, 0d)));
     }
 }

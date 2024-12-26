@@ -60,17 +60,15 @@ public class MatchingExecutorPool {
             // 중간 가격으로 거래 진행
             Double transactionPrice = buyOrderTuple.getScore() + sellOrderTuple.getScore() / 2;
 
-            if (Objects.equals(buyOrder.quantity(), sellOrder.quantity())) {
-                Long quantity = Math.min(buyOrder.quantity(), sellOrder.quantity());
-                stockTradeService.createTransaction(ticker, transactionPrice, quantity, sellOrder.userId(), buyOrder.userId());
-                try (Jedis jedis = jedisPool.getResource()) {
-                    jedis.zrem("orderbook:buy:" + ticker, buyOrderTuple.getElement());
-                    jedis.zrem("orderbook:sell:" + ticker, sellOrderTuple.getElement());
-                    if (buyOrder.quantity().equals(quantity)) {
-                        jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"userId\":\"" + sellOrder.userId() + "\"}");
-                    } else {
-                        jedis.zadd("orderbook:sell:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
-                    }
+            Long quantity = Math.min(buyOrder.quantity(), sellOrder.quantity());
+            stockTradeService.createTransaction(ticker, transactionPrice, quantity, sellOrder.userId(), buyOrder.userId());
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.zrem("orderbook:buy:" + ticker, buyOrderTuple.getElement());
+                jedis.zrem("orderbook:sell:" + ticker, sellOrderTuple.getElement());
+                if (buyOrder.quantity().equals(quantity)) {
+                    jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"userId\":\"" + sellOrder.userId() + "\"}");
+                } else {
+                    jedis.zadd("orderbook:sell:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
                 }
             }
         }
