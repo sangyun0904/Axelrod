@@ -39,6 +39,8 @@ public class MatchingExecutorPool {
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
                 System.out.println(leastPriceSellOrder);
                 matchTransaction(t, maxPriceBuyOrder, leastPriceSellOrder);
+            } catch (Exception e) {
+                break;
             }
             break;
         }
@@ -71,6 +73,8 @@ public class MatchingExecutorPool {
                     jedis.zadd("orderbook:sell:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
                 }
             }
+
+            stockTradeService.updateStockPrice(ticker, transactionPrice);
         }
         return null;
     }

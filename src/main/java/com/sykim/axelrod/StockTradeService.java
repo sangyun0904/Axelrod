@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.SQLDataException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -102,5 +103,18 @@ public class StockTradeService {
     private Portfolio getPortfolioByUserAndStock(String userId, Long stockId) {
         Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserIdAndStockId(userId, stockId);
         return portfolioOptional.orElseGet(() -> portfolioRepository.save(new Portfolio(null, userId, stockId, 0L, 0d)));
+    }
+
+    public List<Stock> getAllStocks() {
+        return stockRepository.findAll();
+    }
+
+    public void updateStockPrice(String ticker, Double transactionPrice) {
+        Optional<Stock> stockOptional = stockRepository.findByTicker(ticker);
+        if (stockOptional.isPresent()) {
+            Stock stock = stockOptional.get();
+            stock.setCurrentPrice(transactionPrice);
+            stockRepository.save(stock);
+        }
     }
 }

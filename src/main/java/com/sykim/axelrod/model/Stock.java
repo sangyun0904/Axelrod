@@ -29,5 +29,9 @@ public class Stock {
     private Double price;
     private LocalDateTime timeStamp;
 
+    public void setCurrentPrice(Double transactionPrice) {
+        this.price = transactionPrice;
+    }
+
     public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
 }

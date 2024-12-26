@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.SQLDataException;
+import java.util.List;
 
 @RestController
 public class StockController {
@@ -56,6 +57,11 @@ public class StockController {
     ) throws SQLDataException {
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), TransactionOrder.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+    }
+
+    @GetMapping("/stocks")
+    public List<Stock> getAllStocks() {
+        return stockTradeService.getAllStocks();
     }
 
 }
