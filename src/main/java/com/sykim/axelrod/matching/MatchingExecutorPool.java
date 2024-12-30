@@ -27,7 +27,7 @@ public class MatchingExecutorPool {
     @Value("${spring.redis.port}")
     private int REDIS_PORT;    // Redis 포트 번호
 
-    public List<String> tickerList = List.of("KSY");
+    public List<String> tickerList = List.of("005930");
 
     @Bean
     public boolean findMatch() {

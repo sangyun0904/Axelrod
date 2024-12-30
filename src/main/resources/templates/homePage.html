@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<h1>Axelrod Stock Simulator</h1>
+<table>
+    <thead>
+    <tr>
+        <th> Title </th>
+        <th> Author </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${stocks.empty}">
+        <td colspan="2"> No Stocks Available </td>
+    </tr>
+    <tr th:each="stocks : ${stocks}">
+        <td><span th:text="${stocks.ticker}"> Title </span></td>
+        <td><span th:text="${stocks.price}"> Author </span></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
