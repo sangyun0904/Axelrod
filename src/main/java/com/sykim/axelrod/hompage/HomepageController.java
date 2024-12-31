@@ -1,6 +1,7 @@
 package com.sykim.axelrod.hompage;
 
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -23,9 +25,7 @@ public class HomepageController {
 
     @GetMapping("")
     public String mainPage(Model model) {
-        List<Stock> stockList = homepageService.getAllStocks();
-        model.addAttribute("stocks", stockList);
-        return "homePage";
+        return renderHomePage(model);
     }
 
     @GetMapping("/create")
@@ -37,8 +37,34 @@ public class HomepageController {
     @PostMapping("/create")
     public String createStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
         stockTradeService.createStock(stock);
+        return renderHomePage(model);
+    }
+
+    @GetMapping("/player/create")
+    public String createPlayerForm(Model model) {
+        model.addAttribute("player", new Player());
+        return "createPlayer";
+    }
+
+    @PostMapping("/player/create")
+    public String createPlayerResult(@ModelAttribute Player.PlayerCreate player, Model model) {
+        Player newPlayer = Player.builder()
+                .username(player.username())
+                .email(player.email())
+                .name(player.name())
+                .password(player.password())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        homepageService.createPlayer(newPlayer);
+        return renderHomePage(model);
+    }
+
+    private String renderHomePage(Model model) {
         List<Stock> stockList = homepageService.getAllStocks();
         model.addAttribute("stocks", stockList);
+        List<Player> playerList = homepageService.getAllPlayer();
+        model.addAttribute("players", playerList);
         return "homePage";
     }
 }

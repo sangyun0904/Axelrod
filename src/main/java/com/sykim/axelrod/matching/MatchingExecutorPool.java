@@ -2,6 +2,7 @@ package com.sykim.axelrod.matching;
 
 import com.google.gson.Gson;
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,10 +29,14 @@ public class MatchingExecutorPool {
     @Value("${spring.redis.port}")
     private int REDIS_PORT;    // Redis 포트 번호
 
-    public List<String> tickerList = List.of("005930");
+    public List<String> tickerList = new ArrayList<>();
 
     @Bean
     public boolean findMatch() {
+        List<Stock> stockList = stockTradeService.getAllStocks();
+        tickerList = stockList.stream().map(Stock::getTicker).toList();
+        System.out.println(tickerList);
+
         JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
         for (String t: tickerList) {
             try (Jedis jedis = jedisPool.getResource()) {
