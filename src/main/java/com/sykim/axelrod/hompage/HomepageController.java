@@ -1,6 +1,7 @@
 package com.sykim.axelrod.hompage;
 
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,10 @@ public class HomepageController {
     HomepageService homepageService;
     @Autowired
     StockTradeService stockTradeService;
+    @Autowired
+    UserService userService;
+
+    private Player user = new Player();
 
     @GetMapping("")
     public String mainPage(Model model) {
@@ -60,11 +65,23 @@ public class HomepageController {
         return renderHomePage(model);
     }
 
+    @PostMapping("/login")
+    public String loginStockResult(@ModelAttribute Player.PlayerLogin login, Model model) {
+        try {
+            user = userService.loginPlayer(login);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return renderHomePage(model);
+    }
+
     private String renderHomePage(Model model) {
         List<Stock> stockList = homepageService.getAllStocks();
         model.addAttribute("stocks", stockList);
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
+        model.addAttribute("user", user);
+        System.out.println(user.getUsername());
         return "homePage";
     }
 }

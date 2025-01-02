@@ -46,6 +46,7 @@ public class MatchingExecutorPool {
                 System.out.println(leastPriceSellOrder);
                 matchTransaction(t, maxPriceBuyOrder, leastPriceSellOrder);
             } catch (Exception e) {
+                System.out.println(e.getMessage());
                 break;
             }
             break;

@@ -24,4 +24,5 @@ public class Player {
     private LocalDateTime updatedAt;
 
     public record PlayerCreate(String username, String email, String name, String password) {}
+    public record PlayerLogin(String username, String password) {}
 }
