@@ -4,6 +4,7 @@ import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
+import com.sykim.axelrod.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -78,6 +79,32 @@ public class HomepageController {
     @GetMapping("/logout")
     public String logoutStockResult(Model model) {
         user = new Player();
+        return renderHomePage(model);
+    }
+
+    @GetMapping("/buy")
+    public String buyStockForm(Model model) {
+        model.addAttribute("order", new Transaction());
+        model.addAttribute("type", "Buy");
+        return "orderStock";
+    }
+
+    @PostMapping("/buy")
+    public String buyStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
+        stockTradeService.createStock(stock);
+        return renderHomePage(model);
+    }
+
+    @GetMapping("/sell")
+    public String sellStockForm(Model model) {
+        model.addAttribute("order", new Transaction());
+        model.addAttribute("type", "Sell");
+        return "orderStock";
+    }
+
+    @PostMapping("/sell")
+    public String sellStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
+        stockTradeService.createStock(stock);
         return renderHomePage(model);
     }
 
