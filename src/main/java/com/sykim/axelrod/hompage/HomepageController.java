@@ -75,6 +75,12 @@ public class HomepageController {
         return renderHomePage(model);
     }
 
+    @GetMapping("/logout")
+    public String logoutStockResult(Model model) {
+        user = new Player();
+        return renderHomePage(model);
+    }
+
     private String renderHomePage(Model model) {
         List<Stock> stockList = homepageService.getAllStocks();
         model.addAttribute("stocks", stockList);
