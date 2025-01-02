@@ -26,7 +26,7 @@ public class StockController {
 
     @PostMapping("/issue")
     public Transaction issueStocks(
-            @RequestBody Transaction.TransactionOrder issuance
+            @RequestBody TransactionOrder.OrderRequest issuance
     ) {
         return stockTradeService.issueStock(issuance);
     }
@@ -45,18 +45,18 @@ public class StockController {
 
     @PostMapping("/order/buy")
     public void crateBuyStockOrder(
-            @RequestBody Transaction.TransactionOrder transactionOrder
+            @RequestBody TransactionOrder.OrderRequest transactionOrder
     ) throws SQLDataException {
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.BUY);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
     }
 
     @PostMapping("/order/sell")
     public void crateSellStockOrder(
-            @RequestBody Transaction.TransactionOrder transactionOrder
+            @RequestBody TransactionOrder.OrderRequest transactionOrder
     ) throws SQLDataException {
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.SELL);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.userId(), transactionOrder.ticker(), TransactionOrder.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+        matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
     }
 
     @GetMapping("/stocks")

@@ -24,4 +24,7 @@ public class TransactionOrder {
     private Type type;
 
     public enum Type { SELL, BUY }
+
+    public record OrderRequest(String playerId, String ticker, Long quantity, Double price) {}
+    public record WebOrderRequest(String ticker, Long quantity, Double price) {}
 }

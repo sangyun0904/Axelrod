@@ -2,9 +2,11 @@ package com.sykim.axelrod.hompage;
 
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
+import com.sykim.axelrod.model.TransactionOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.sql.SQLDataException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,6 +29,8 @@ public class HomepageController {
     StockTradeService stockTradeService;
     @Autowired
     UserService userService;
+    @Autowired
+    MatchingService matchingService;
 
     private Player user = new Player();
 
@@ -90,8 +95,11 @@ public class HomepageController {
     }
 
     @PostMapping("/buy")
-    public String buyStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
-        stockTradeService.createStock(stock);
+    public String buyStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
+        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
+        stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
         return renderHomePage(model);
     }
 
@@ -103,8 +111,11 @@ public class HomepageController {
     }
 
     @PostMapping("/sell")
-    public String sellStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
-        stockTradeService.createStock(stock);
+    public String sellStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
+        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
+        stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
         return renderHomePage(model);
     }
 

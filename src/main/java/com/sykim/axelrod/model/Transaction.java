@@ -28,7 +28,5 @@ public class Transaction {
 
     public enum Type { SELL, BUY, ISSUE }
 
-    public record TransactionOrder(String userId, String ticker, Long quantity, Double price) {}
-    public record WebTransactionOrder(String ticker, Long quantity, Double price) {}
     public record RedisOrder(Long orderId, Long quantity, String userId) {}
 }

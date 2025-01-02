@@ -4,10 +4,13 @@ import com.google.gson.Gson;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
@@ -16,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Configuration
+@Component
 public class MatchingExecutorPool {
 
     @Autowired
@@ -29,29 +32,31 @@ public class MatchingExecutorPool {
     @Value("${spring.redis.port}")
     private int REDIS_PORT;    // Redis 포트 번호
 
+    private boolean systemRunning = true;
+    @PreDestroy
+    public void onDestroy() {
+        systemRunning = false;
+    }
+
     public List<String> tickerList = new ArrayList<>();
 
-    @Bean
-    public boolean findMatch() {
+    @Scheduled(fixedRate = 5000)
+    public void findMatch() {
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
-        System.out.println(tickerList);
 
         JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
-        for (String t: tickerList) {
+        for (String t : tickerList) {
+            System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
                 Tuple maxPriceBuyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, -1, -1).getLast();
-                System.out.println(maxPriceBuyOrder);
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
-                System.out.println(leastPriceSellOrder);
+
                 matchTransaction(t, maxPriceBuyOrder, leastPriceSellOrder);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
-                break;
+//                System.out.println(e.getMessage());
             }
-            break;
         }
-        return true;
     }
 
     private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) {
@@ -60,14 +65,20 @@ public class MatchingExecutorPool {
         //        - 남은 주식 redis 에 다시 ZADD
         JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
 
+
         // 구매 주문 가격이 판매 주문 가격보다 높거나 같으면 거래 채결
         if (buyOrderTuple.getScore() >= sellOrderTuple.getScore()) {
             Gson gson = new Gson();
+            System.out.println(buyOrderTuple.getScore() >= sellOrderTuple.getScore());
             Transaction.RedisOrder buyOrder = gson.fromJson(buyOrderTuple.getElement(), Transaction.RedisOrder.class);
+            System.out.println(buyOrder.orderId());
             Transaction.RedisOrder sellOrder = gson.fromJson(sellOrderTuple.getElement(), Transaction.RedisOrder.class);
+            System.out.println(sellOrder.orderId());
 
             // 중간 가격으로 거래 진행
-            Double transactionPrice = buyOrderTuple.getScore() + sellOrderTuple.getScore() / 2;
+            Double transactionPrice = (buyOrderTuple.getScore() + sellOrderTuple.getScore()) / 2;
+
+            System.out.println("transaction (price: " + transactionPrice + ", ticker: " + ticker + ")");
 
             Long quantity = Math.min(buyOrder.quantity(), sellOrder.quantity());
             stockTradeService.createTransaction(ticker, transactionPrice, quantity, sellOrder.userId(), buyOrder.userId());

@@ -31,22 +31,22 @@ public class StockTradeService {
     private OrderRepository orderRepository;
 
     @Transactional
-    public Transaction issueStock(Transaction.TransactionOrder issuance) {
+    public Transaction issueStock(TransactionOrder.OrderRequest issuance) {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(issuance.ticker());
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            Transaction transaction = new Transaction(null, issuance.userId(), issuance.ticker(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE, LocalDate.now());
+            Transaction transaction = new Transaction(null, issuance.playerId(), issuance.ticker(), issuance.quantity(), issuance.price(), Transaction.Type.ISSUE, LocalDate.now());
 
             // 플레이어 포트폴리오 업데이트
-            Optional<Portfolio> portfolioOrNull = portfolioRepository.findByUserIdAndStockId(issuance.userId(), stock.getId());
+            Optional<Portfolio> portfolioOrNull = portfolioRepository.findByUserIdAndStockId(issuance.playerId(), stock.getId());
             Portfolio newPortfolio;
             if (portfolioOrNull.isPresent()) {
                 Portfolio oldPortfolio = portfolioOrNull.get();
                 Double newAvgPrice = (oldPortfolio.getAveragePrice() * oldPortfolio.getQuantity() + issuance.price() * issuance.quantity()) / oldPortfolio.getQuantity() + issuance.quantity();
-                newPortfolio = new Portfolio(oldPortfolio.getId(), issuance.userId(), stock.getId(), issuance.quantity() + oldPortfolio.getQuantity(), newAvgPrice);
+                newPortfolio = new Portfolio(oldPortfolio.getId(), issuance.playerId(), stock.getId(), issuance.quantity() + oldPortfolio.getQuantity(), newAvgPrice);
             } else {
-                newPortfolio = new Portfolio(null, issuance.userId(), stock.getId(), issuance.quantity(), issuance.price());
+                newPortfolio = new Portfolio(null, issuance.playerId(), stock.getId(), issuance.quantity(), issuance.price());
             }
             portfolioRepository.save(newPortfolio);
             return transactionRepository.save(transaction);
@@ -64,12 +64,12 @@ public class StockTradeService {
     }
 
     @Transactional
-    public TransactionOrder createTransactionOrder(Transaction.TransactionOrder transactionOrder, TransactionOrder.Type type) throws SQLDataException {
+    public TransactionOrder createTransactionOrder(TransactionOrder.OrderRequest transactionOrder, TransactionOrder.Type type) throws SQLDataException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(transactionOrder.ticker());
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
-            TransactionOrder order = new TransactionOrder(null, transactionOrder.userId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
+            TransactionOrder order = new TransactionOrder(null, transactionOrder.playerId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
             return orderRepository.save(order);
         } else {
             throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
