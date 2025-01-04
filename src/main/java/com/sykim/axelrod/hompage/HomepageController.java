@@ -10,10 +10,7 @@ import com.sykim.axelrod.model.TransactionOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLDataException;
 import java.time.LocalDateTime;
@@ -32,16 +29,15 @@ public class HomepageController {
     @Autowired
     MatchingService matchingService;
 
-    private Player user = new Player();
 
     @GetMapping("")
-    public String mainPage(Model model) {
+    public String mainPage(@RequestParam(value = "userId", required = false) String userId, Model model) {
         List<Stock> stockList = homepageService.getAllStocks();
         model.addAttribute("stocks", stockList);
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
-        model.addAttribute("user", user);
-        System.out.println(user.getUsername());
+        model.addAttribute("user", new Player());
+        model.addAttribute("userId", userId);
         return "homePage";
     }
 
@@ -79,50 +75,54 @@ public class HomepageController {
 
     @PostMapping("/login")
     public String loginStockResult(@ModelAttribute Player.PlayerLogin login, Model model) {
+        String userId = "";
+
         try {
-            user = userService.loginPlayer(login);
+            userService.loginPlayer(login);
+            userId = "?userId=" + login.username();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return "redirect:/homepage";
+        return "redirect:/homepage" + userId;
     }
 
     @GetMapping("/logout")
     public String logoutStockResult(Model model) {
-        user = new Player();
         return "redirect:/homepage";
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(Model model) {
-        model.addAttribute("order", new Transaction());
+    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
         return "orderStock";
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
-        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(order.playerId(), order.ticker(), order.quantity(), order.price());
         stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
-        return "redirect:/homepage";
+        matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
+        return "redirect:/homepage?userId=" + order.playerId();
     }
 
     @GetMapping("/sell")
-    public String sellStockForm(Model model) {
-        model.addAttribute("order", new Transaction());
+    public String sellStockForm(@RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Sell");
         return "orderStock";
     }
 
     @PostMapping("/Sell")
-    public String sellStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
-        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
+    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(order.playerId(), order.ticker(), order.quantity(), order.price());
         stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
-        return "redirect:/homepage";
+        matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
+        return "redirect:/homepage?userId=" + order.playerId();
     }
 
 }
