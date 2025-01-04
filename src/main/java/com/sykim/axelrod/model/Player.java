@@ -20,6 +20,9 @@ public class Player {
     private String name;
     private String email;
     private String password;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public record PlayerCreate(String username, String email, String name, String password) {}
+    public record PlayerLogin(String username, String password) {}
 }

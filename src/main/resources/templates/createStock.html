@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Stock Page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<h1>Form</h1>
+<form action="#" th:action="@{/homepage/create}" th:object="${stock}" method="post">
+    <p>Ticker: <input type="text" th:field="*{ticker}" /></p>
+    <p>Name: <input type="text" th:field="*{name}" /></p>
+    <p>Market: <input type="text" th:field="*{market}" /></p>
+    <p>Sector: <input type="text" th:field="*{sector}" /></p>
+    <p>price: <input type="text" th:field="*{price}" /></p>
+    <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
+</form>
+</body>
+</html>

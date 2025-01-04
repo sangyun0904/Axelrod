@@ -17,7 +17,7 @@ public class Stock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long stock_id;
+    private Long id;
     // stock symbol
     @Column(unique=true)
     private String ticker;
@@ -28,4 +28,10 @@ public class Stock {
     private String sector;
     private Double price;
     private LocalDateTime timeStamp;
+
+    public void setCurrentPrice(Double transactionPrice) {
+        this.price = transactionPrice;
+    }
+
+    public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
 }

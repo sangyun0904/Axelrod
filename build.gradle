@@ -29,11 +29,17 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 
 	// postgresql
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'com.opentable.components:otj-pg-embedded:1.0.3'
 
+	// redis
+	implementation 'redis.clients:jedis:5.2.0'
+
+	// thymeleaf
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 }
 
 tasks.named('test') {
