@@ -36,7 +36,13 @@ public class HomepageController {
 
     @GetMapping("")
     public String mainPage(Model model) {
-        return renderHomePage(model);
+        List<Stock> stockList = homepageService.getAllStocks();
+        model.addAttribute("stocks", stockList);
+        List<Player> playerList = homepageService.getAllPlayer();
+        model.addAttribute("players", playerList);
+        model.addAttribute("user", user);
+        System.out.println(user.getUsername());
+        return "homePage";
     }
 
     @GetMapping("/create")
@@ -48,7 +54,7 @@ public class HomepageController {
     @PostMapping("/create")
     public String createStockResult(@ModelAttribute Stock.StockCreate stock, Model model) {
         stockTradeService.createStock(stock);
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
     @GetMapping("/player/create")
@@ -68,7 +74,7 @@ public class HomepageController {
                 .updatedAt(LocalDateTime.now())
                 .build();
         homepageService.createPlayer(newPlayer);
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
     @PostMapping("/login")
@@ -78,13 +84,13 @@ public class HomepageController {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
     @GetMapping("/logout")
     public String logoutStockResult(Model model) {
         user = new Player();
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
     @GetMapping("/buy")
@@ -94,13 +100,13 @@ public class HomepageController {
         return "orderStock";
     }
 
-    @PostMapping("/buy")
+    @PostMapping("/Buy")
     public String buyStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
         TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
         stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
     @GetMapping("/sell")
@@ -110,22 +116,13 @@ public class HomepageController {
         return "orderStock";
     }
 
-    @PostMapping("/sell")
+    @PostMapping("/Sell")
     public String sellStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
         TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
         stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
-        return renderHomePage(model);
+        return "redirect:/homepage";
     }
 
-    private String renderHomePage(Model model) {
-        List<Stock> stockList = homepageService.getAllStocks();
-        model.addAttribute("stocks", stockList);
-        List<Player> playerList = homepageService.getAllPlayer();
-        model.addAttribute("players", playerList);
-        model.addAttribute("user", user);
-        System.out.println(user.getUsername());
-        return "homePage";
-    }
 }
