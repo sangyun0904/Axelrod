@@ -23,6 +23,9 @@
           padding: 10px;
           border: 3px solid #003458;
         }
+        div.inside {
+          height: 99.8%;
+        }
         a {
           margin-right: 10px;
         }
@@ -50,7 +53,8 @@
         </tr>
         </tbody>
     </table>
-    <a href="/homepage/create">Create Stock</a>
+        <a href="/homepage/create">Create Stock</a>
+        <canvas hidden="hidden" id="myChart" style="width:100%;max-width:700px"></canvas>
     </div>
     <div class="right">
         <table>
@@ -83,12 +87,50 @@
         </form>
     </div>
     <div th:if="${userId != null}" class="left">
+        <div class="left inside">
+
         <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
         <p><a th:href="@{/homepage/buy(userId=${userId})}">Buy Stock</a><a th:href="@{/homepage/sell(userId=${userId})}">Sell Stock</a></p>
         <a href="/homepage/logout">Log Out</a>
+        </div>
+        <div class="right inside">
+            <table>
+                <thead>
+                <tr>
+                    <th> StockId </th>
+                    <th> quantity </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${stocks.empty}">
+                    <td colspan="2"> No Stocks Available </td>
+                </tr>
+                <tr th:each="portfolio : ${portfolios}">
+                    <td><span th:text="${portfolio.stockId}"> </span></td>
+                    <td><span th:text="${portfolio.quantity}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     <div class="right">
-        <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+        <table>
+            <thead>
+            <tr>
+                <th> Ticker </th>
+                <th> Price </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${stocks.empty}">
+                <td colspan="2"> No Stocks Available </td>
+            </tr>
+            <tr th:each="stock : ${stocks}">
+                <td><span th:text="${stock.ticker}"> </span></td>
+                <td><span th:text="${stock.price}"> </span></td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 

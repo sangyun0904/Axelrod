@@ -3,10 +3,7 @@ package com.sykim.axelrod.hompage;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.matching.MatchingService;
-import com.sykim.axelrod.model.Player;
-import com.sykim.axelrod.model.Stock;
-import com.sykim.axelrod.model.Transaction;
-import com.sykim.axelrod.model.TransactionOrder;
+import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -38,6 +35,8 @@ public class HomepageController {
         model.addAttribute("players", playerList);
         model.addAttribute("user", new Player());
         model.addAttribute("userId", userId);
+        List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
+        model.addAttribute("portfolios", userPFList);
         return "homePage";
     }
 

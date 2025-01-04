@@ -117,4 +117,8 @@ public class StockTradeService {
             stockRepository.save(stock);
         }
     }
+
+    public List<Portfolio> getPlayerPortfolio(String userId) {
+        return portfolioRepository.findByUserId(userId);
+    }
 }
