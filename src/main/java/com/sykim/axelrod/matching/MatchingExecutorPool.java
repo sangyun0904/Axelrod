@@ -82,9 +82,9 @@ public class MatchingExecutorPool {
                 jedis.zrem("orderbook:buy:" + ticker, buyOrderTuple.getElement());
                 jedis.zrem("orderbook:sell:" + ticker, sellOrderTuple.getElement());
                 if (buyOrder.quantity().equals(quantity)) {
-                    jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"playerId\":\"" + sellOrder.userId() + "\"}");
+                    jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"userId\":\"" + sellOrder.userId() + "\"}");
                 } else {
-                    jedis.zadd("orderbook:buy:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"playerId\":\"" + buyOrder.userId() + "\"}");
+                    jedis.zadd("orderbook:buy:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
                 }
             }
 
