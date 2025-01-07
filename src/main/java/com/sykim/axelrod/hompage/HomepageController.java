@@ -46,6 +46,7 @@ public class HomepageController {
         List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
+        model.addAttribute("portfolios", userPFList);
 
         List<TransactionOrder> buyOrderList = new ArrayList<>();
         List<TransactionOrder> sellOrderList = new ArrayList<>();

@@ -106,7 +106,7 @@
                     <td colspan="4"> No Buy Order </td>
                 </tr>
                 <tr th:each="pf : ${portfolios}">
-                    <td><span th:text="${pf.stockId}"> </span></td>
+                    <td><span th:text="${pf.ticker}"> </span></td>
                     <td><span th:text="${pf.quantity}"> </span></td>
                     <td><span th:text="${pf.averagePrice}"> </span></td>
                 </tr>

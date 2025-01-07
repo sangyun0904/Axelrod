@@ -40,7 +40,7 @@ public class MatchingService {
         // 매도할 주식을 충분히 가지고 있는지 확인 (admin 제회)
         if (!userId.equals("admin")) {
             if (orderType == TransactionOrder.Type.SELL) {
-                Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserIdAndStockId(userId, stockOptional.get().getId());
+                Optional<Portfolio> portfolioOptional = portfolioRepository.findByPlayerIdAndTicker(userId, stockOptional.get().getTicker());
                 if (portfolioOptional.isPresent()) {
                     Portfolio portfolio = portfolioOptional.get();
                     if (portfolio.getQuantity() < quantity) {

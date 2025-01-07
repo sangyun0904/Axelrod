@@ -33,6 +33,6 @@ public class HomepageService {
     }
 
     public List<Portfolio> getPortfolioByUser(String userId) {
-        return portfolioRepository.findByUserId(userId);
+        return portfolioRepository.findByPlayerId(userId);
     }
 }
