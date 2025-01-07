@@ -1,7 +1,9 @@
 package com.sykim.axelrod.hompage;
 
+import com.google.gson.Gson;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.config.RedisConfig;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.Player;
 import com.sykim.axelrod.model.Stock;
@@ -14,9 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.resps.Tuple;
 
 import java.sql.SQLDataException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -32,6 +39,9 @@ public class HomepageController {
     @Autowired
     MatchingService matchingService;
 
+    @Autowired
+    JedisPool jedisPool;
+
     private Player user = new Player();
 
     @GetMapping("")
@@ -42,6 +52,27 @@ public class HomepageController {
         model.addAttribute("players", playerList);
         model.addAttribute("user", user);
         System.out.println(user.getUsername());
+
+        List<TransactionOrder> buyOrderList = new ArrayList<>();
+        List<TransactionOrder> sellOrderList = new ArrayList<>();
+        for (Stock stock: stockList) {
+            Gson gson = new Gson();
+            try (Jedis jedis = jedisPool.getResource()) {
+                List<Tuple> buyOrderTupleList = jedis.zrangeWithScores("orderbook:buy:" + stock.getTicker(), 0, -1);
+                for (Tuple order: buyOrderTupleList) {
+                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
+                    buyOrderList.add(new TransactionOrder(null, user.getUsername(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.BUY));
+                }
+                List<Tuple> sellOrderTupleList = jedis.zrangeWithScores("orderbook:sell:" + stock.getTicker(), 0, -1);
+                for (Tuple order: sellOrderTupleList) {
+                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
+                    sellOrderList.add(new TransactionOrder(null, user.getUsername(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.SELL));
+                }
+            }
+        }
+
+        model.addAttribute("buyOrderList", buyOrderList);
+        model.addAttribute("sellOrderList", sellOrderList);
         return "homePage";
     }
 

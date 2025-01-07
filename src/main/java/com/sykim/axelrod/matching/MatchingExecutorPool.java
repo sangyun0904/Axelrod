@@ -27,10 +27,8 @@ public class MatchingExecutorPool {
     @Autowired
     private MatchingService matchingService;
 
-    @Value("${spring.redis.host}")
-    private String REDIS_HOST; // Redis 호스트 주소
-    @Value("${spring.redis.port}")
-    private int REDIS_PORT;    // Redis 포트 번호
+    @Autowired
+    JedisPool jedisPool;
 
     private boolean systemRunning = true;
     @PreDestroy
@@ -45,7 +43,6 @@ public class MatchingExecutorPool {
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
-        JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
         for (String t : tickerList) {
             System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
@@ -63,7 +60,6 @@ public class MatchingExecutorPool {
         // TODO : - 주식 판매 금액이 구매 수량 금액보다 높으면 null 리턴
         //        - 판매 수량이 같거나 더 많으면 Transaction 생성 및 Player Portfolio 수정
         //        - 남은 주식 redis 에 다시 ZADD
-        JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
 
 
         // 구매 주문 가격이 판매 주문 가격보다 높거나 같으면 거래 채결
@@ -86,9 +82,9 @@ public class MatchingExecutorPool {
                 jedis.zrem("orderbook:buy:" + ticker, buyOrderTuple.getElement());
                 jedis.zrem("orderbook:sell:" + ticker, sellOrderTuple.getElement());
                 if (buyOrder.quantity().equals(quantity)) {
-                    jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"userId\":\"" + sellOrder.userId() + "\"}");
+                    jedis.zadd("orderbook:sell:" + ticker , sellOrderTuple.getScore(), "{\"orderId\":\"" + sellOrder.orderId() + "\",\"quantity\":" + (sellOrder.quantity() - quantity) + ",\"playerId\":\"" + sellOrder.userId() + "\"}");
                 } else {
-                    jedis.zadd("orderbook:buy:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
+                    jedis.zadd("orderbook:buy:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"playerId\":\"" + buyOrder.userId() + "\"}");
                 }
             }
 
