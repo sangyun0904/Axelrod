@@ -7,6 +7,7 @@
 <body>
 <h1  th:text=" ${type} + ' Stock Form'"></h1>
 <form action="#" th:action="'/homepage/' + ${type}" th:object="${order}" method="post">
+    <p hidden ><input type="text" th:field="*{playerId}"/></p>
     <p>Ticker: <input type="text" th:field="*{ticker}" /></p>
     <p>quantity: <input type="number" th:field="*{quantity}" /></p>
     <p>price: <input type="text" th:field="*{price}" /></p>

@@ -77,7 +77,7 @@
     </div>
 </div>
 <div>
-    <div th:if="${user.username == null}" class="left">
+    <div th:if="${userId == null}" class="left">
         <h3>Login</h3>
         <form action="#" th:action="@{/homepage/login}" th:object="${user}" method="post">
             <p>Username: <input type="text" th:field="*{username}" /></p>
@@ -85,10 +85,10 @@
             <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
         </form>
     </div>
-    <div th:if="${user.username != null}" class="left">
+    <div th:if="${userId != null}" class="left">
         <div class="left" style="border:0px">
-        <h3 th:text="'Hello ' + ${user.username} + '!'"></h3>
-        <p><a href="/homepage/buy">Buy Stock</a><a href="/homepage/sell">Sell Stock</a></p>
+        <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
+        <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
         <a href="/homepage/logout">Log Out</a>
         </div>
         <div class="right" style="height:100%; border:0px;">
@@ -116,7 +116,7 @@
     </div>
     <div class="right">
         <div class="left" style="border:0px;">
-            <table style="margin:auto; width:100%">
+            <table style="margin:auto; width:90%">
                 <caption><b>Current Buy Order</b></caption>
                 <thead>
                 <tr>
@@ -140,7 +140,7 @@
             </table>
         </div>
         <div class="right" style="border:0px;">
-            <table style="margin:auto; width:100%">
+            <table style="margin:auto; width:90%">
                 <caption><b>Current Sell Order</b></caption>
                 <thead>
                 <tr>
