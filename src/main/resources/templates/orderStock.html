@@ -29,7 +29,8 @@
           xLabel: 'Carats →',
           yLabel: '↑ Price ($)',
           width: 1000,
-          height: 500
+          height: 500,
+          yDomain: [0, 20000]
         });
 
         d3.select('body').append(() => chart);

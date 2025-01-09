@@ -1,6 +1,8 @@
 package com.sykim.axelrod.hompage;
 
 import com.google.gson.Gson;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.matching.MatchingService;
@@ -13,10 +15,15 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLDataException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/homepage")
@@ -121,38 +128,25 @@ public class HomepageController {
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) {
+    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) throws IOException, CsvValidationException {
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
 
         List<Stock.Diamond> dataList = new ArrayList<>();
 
-        dataList.add(new Stock.Diamond(0.23,326));
-        dataList.add(new Stock.Diamond(0.21,326));
-        dataList.add(new Stock.Diamond(0.23,327));
-        dataList.add(new Stock.Diamond(0.29,334));
-        dataList.add(new Stock.Diamond(0.31,335));
-        dataList.add(new Stock.Diamond(0.24,336));
-        dataList.add(new Stock.Diamond(0.24,336));
-        dataList.add(new Stock.Diamond(0.26,337));
-        dataList.add(new Stock.Diamond(0.22,337));
-        dataList.add(new Stock.Diamond(0.23,338));
-        dataList.add(new Stock.Diamond(0.3,339));
-        dataList.add(new Stock.Diamond(0.23,340));
-        dataList.add(new Stock.Diamond(0.22,342));
-        dataList.add(new Stock.Diamond(0.31,344));
-        dataList.add(new Stock.Diamond(0.2,345));
-        dataList.add(new Stock.Diamond(0.32,345));
-        dataList.add(new Stock.Diamond(0.3,348));
-        dataList.add(new Stock.Diamond(0.3,351));
-        dataList.add(new Stock.Diamond(0.3,351));
-        dataList.add(new Stock.Diamond(0.3,351));
-        dataList.add(new Stock.Diamond(0.3,351));
-        dataList.add(new Stock.Diamond(0.23,352));
-        dataList.add(new Stock.Diamond(0.23,353));
-        dataList.add(new Stock.Diamond(0.31,353));
-        dataList.add(new Stock.Diamond(0.31,353));
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/diamonds.csv").getFile())
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        csvReader.readNext();
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            dataList.add(new Stock.Diamond(Double.parseDouble(record[0]), Integer.parseInt(record[1])));
+        }
 
         model.addAttribute("chartData", dataList);
 
