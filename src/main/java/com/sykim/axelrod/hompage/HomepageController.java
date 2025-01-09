@@ -3,7 +3,6 @@ package com.sykim.axelrod.hompage;
 import com.google.gson.Gson;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
-import com.sykim.axelrod.config.RedisConfig;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPooled;
 import redis.clients.jedis.resps.Tuple;
 
 import java.sql.SQLDataException;
@@ -127,6 +125,38 @@ public class HomepageController {
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
+
+        List<Stock.Diamond> dataList = new ArrayList<>();
+
+        dataList.add(new Stock.Diamond(0.23,326));
+        dataList.add(new Stock.Diamond(0.21,326));
+        dataList.add(new Stock.Diamond(0.23,327));
+        dataList.add(new Stock.Diamond(0.29,334));
+        dataList.add(new Stock.Diamond(0.31,335));
+        dataList.add(new Stock.Diamond(0.24,336));
+        dataList.add(new Stock.Diamond(0.24,336));
+        dataList.add(new Stock.Diamond(0.26,337));
+        dataList.add(new Stock.Diamond(0.22,337));
+        dataList.add(new Stock.Diamond(0.23,338));
+        dataList.add(new Stock.Diamond(0.3,339));
+        dataList.add(new Stock.Diamond(0.23,340));
+        dataList.add(new Stock.Diamond(0.22,342));
+        dataList.add(new Stock.Diamond(0.31,344));
+        dataList.add(new Stock.Diamond(0.2,345));
+        dataList.add(new Stock.Diamond(0.32,345));
+        dataList.add(new Stock.Diamond(0.3,348));
+        dataList.add(new Stock.Diamond(0.3,351));
+        dataList.add(new Stock.Diamond(0.3,351));
+        dataList.add(new Stock.Diamond(0.3,351));
+        dataList.add(new Stock.Diamond(0.3,351));
+        dataList.add(new Stock.Diamond(0.23,352));
+        dataList.add(new Stock.Diamond(0.23,353));
+        dataList.add(new Stock.Diamond(0.31,353));
+        dataList.add(new Stock.Diamond(0.31,353));
+
+        model.addAttribute("chartData", dataList);
+
+
         return "orderStock";
     }
 

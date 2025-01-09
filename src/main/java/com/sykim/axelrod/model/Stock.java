@@ -34,4 +34,6 @@ public class Stock {
     }
 
     public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
+
+    public record Diamond(Double carat, int price) {}
 }
