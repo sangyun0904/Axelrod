@@ -43,8 +43,10 @@ public class HomepageController {
 
     @GetMapping("")
     public String mainPage(@RequestParam(name = "userId", required = false) String userId, Model model) {
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+
         List<Stock> stockList = homepageService.getAllStocks();
-        model.addAttribute("stocks", stockList);
+        model.addAttribute("stocks", stockList.subList(0, 15));
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
@@ -74,6 +76,7 @@ public class HomepageController {
         model.addAttribute("buyOrderList", buyOrderList);
         model.addAttribute("sellOrderList", sellOrderList);
 
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
     }
 

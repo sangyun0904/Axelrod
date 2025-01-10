@@ -12,6 +12,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,11 +38,12 @@ public class MatchingExecutorPool {
 
     @Scheduled(fixedRate = 5000)
     public void findMatch() {
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
         for (String t : tickerList) {
-            System.out.println(t);
+//            System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
                 Tuple maxPriceBuyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, -1, -1).getLast();
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
@@ -51,6 +53,7 @@ public class MatchingExecutorPool {
 //                System.out.println(e.getMessage());
             }
         }
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
     }
 
     private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) {
