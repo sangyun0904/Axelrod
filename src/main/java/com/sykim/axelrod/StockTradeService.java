@@ -59,7 +59,7 @@ public class StockTradeService {
 
     @Transactional
     public Stock createStock(StockCreate stock) {
-        Stock newStock = new Stock(null, stock.ticker(), stock.name(), stock.market(), stock.sector(), stock.price(), LocalDateTime.now());
+        Stock newStock = new Stock(null, stock.ticker(), stock.name(), stock.market(), stock.sector(), null, stock.price(), LocalDateTime.now());
         return stockRepository.save(newStock);
     }
 
@@ -120,6 +120,10 @@ public class StockTradeService {
 
     public List<Portfolio> getPlayerPortfolio(String userId) {
         return portfolioRepository.findByPlayerId(userId);
+    }
+
+    public List<Stock> createStockByStockList(List<Stock> nasdaqStockList) {
+        return stockRepository.saveAll(nasdaqStockList);
     }
 }
 

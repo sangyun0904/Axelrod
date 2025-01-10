@@ -24,8 +24,9 @@ public class Stock {
     private String name;
     // e.g. NASDAQ
     private String market;
-    // industry sector e.g. Manufacture
+    // industry sector e.g. Technology Services
     private String sector;
+    private String industry;
     private Double price;
     private LocalDateTime timeStamp;
 
