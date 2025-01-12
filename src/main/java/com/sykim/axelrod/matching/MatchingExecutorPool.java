@@ -25,6 +25,9 @@ public class MatchingExecutorPool {
     @Autowired
     private MatchingService matchingService;
 
+    private final int LOOP_NUM=300;
+    private int stockMatchingLoopIndex = 0;
+
     @Autowired
     JedisPool jedisPool;
 
@@ -36,14 +39,20 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 500)
     public void findMatch() {
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
-        for (String t : tickerList) {
-//            System.out.println(t);
+        System.out.println(tickerList.size() / LOOP_NUM);
+
+        for (int i=0; i < LOOP_NUM; i++) {
+            int idx = stockMatchingLoopIndex * LOOP_NUM + i;
+            if (tickerList.size() <= idx) break;
+            String t = tickerList.get(idx);
+
+            System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
                 Tuple maxPriceBuyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, -1, -1).getLast();
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
@@ -53,6 +62,7 @@ public class MatchingExecutorPool {
 //                System.out.println(e.getMessage());
             }
         }
+        stockMatchingLoopIndex = (stockMatchingLoopIndex + 1) % (tickerList.size() / LOOP_NUM + 1);
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
     }
 
