@@ -182,7 +182,7 @@ public class HomepageController {
 
     @PostMapping("/Buy")
     public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
-        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
+        stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
         return "redirect:/homepage?userId=" + order.playerId();
@@ -198,7 +198,7 @@ public class HomepageController {
 
     @PostMapping("/Sell")
     public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
-        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
+        stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.SELL);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
         return "redirect:/homepage?userId=" + order.playerId();

@@ -1,10 +1,7 @@
 package com.sykim.axelrod;
 
-import com.sykim.axelrod.model.TransactionOrder;
-import com.sykim.axelrod.model.Portfolio;
-import com.sykim.axelrod.model.Stock;
+import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.model.Stock.StockCreate;
-import com.sykim.axelrod.model.Transaction;
 import com.sykim.axelrod.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -124,6 +121,35 @@ public class StockTradeService {
 
     public List<Stock> createStockByStockList(List<Stock> nasdaqStockList) {
         return stockRepository.saveAll(nasdaqStockList);
+    }
+
+    @Transactional
+    public boolean isAllowedToMakeOrder(TransactionOrder.OrderRequest order, TransactionOrder.Type orderType) {
+
+        String userId = order.playerId();
+
+        Optional<Stock> stockOptional = stockRepository.findByTicker(order.ticker());
+        if (stockOptional.isEmpty()) throw new RuntimeException("ticker : " + order.ticker() + " 의 주식이 존재하지 않습니다.");
+        Optional<Player> playerOptional = playerRepository.findById(userId);
+        if (playerOptional.isEmpty()) throw new RuntimeException("user id : " + userId + " 의 사용자가 존재하지 않습니다.");
+
+        // 매도할 주식을 충분히 가지고 있는지 확인 (admin 제회)
+        if (!userId.equals("admin")) {
+            if (orderType == TransactionOrder.Type.SELL) {
+                Optional<Portfolio> portfolioOptional = portfolioRepository.findByPlayerIdAndTicker(userId, stockOptional.get().getTicker());
+                if (portfolioOptional.isPresent()) {
+                    Portfolio portfolio = portfolioOptional.get();
+                    if (portfolio.getQuantity() < order.quantity()) {
+                        throw new RuntimeException("Not enough quantity to sell!");
+                    }
+                }
+                else {
+                    throw new RuntimeException("Not enough quantity to sell!");
+                }
+            }
+        }
+
+        return true;
     }
 }
 
