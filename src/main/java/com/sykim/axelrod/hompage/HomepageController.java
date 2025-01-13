@@ -8,6 +8,8 @@ import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 @RequestMapping("/homepage")
@@ -42,11 +47,29 @@ public class HomepageController {
     JedisPool jedisPool;
 
     @GetMapping("")
-    public String mainPage(@RequestParam(name = "userId", required = false) String userId, Model model) {
+    public String mainPage(
+            @RequestParam(name = "userId", required = false) String userId,
+            @RequestParam("page") Optional<Integer> page,
+            @RequestParam("size") Optional<Integer> size,
+            Model model) {
+
+        int currentPage = page.orElse(1);
+        int pageSize = size.orElse(15);
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
 
+        Page<Stock> stockPage = homepageService.findStockPaginated(PageRequest.of(currentPage - 1, pageSize));
+        model.addAttribute("stocks", stockPage);
+
+        int totalPages = stockPage.getTotalPages();
+        System.out.println("total pages : " + totalPages);
+        if (totalPages > 0) {
+            List<Integer> pageNumbers = IntStream.rangeClosed(currentPage, currentPage + 10)
+                    .boxed()
+                    .collect(Collectors.toList());
+            model.addAttribute("pageNumbers", pageNumbers);
+        }
+
         List<Stock> stockList = homepageService.getAllStocks();
-        model.addAttribute("stocks", stockList.subList(0, 15));
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 

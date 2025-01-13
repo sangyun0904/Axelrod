@@ -4,7 +4,7 @@
     <title>Getting Started: Serving Web Content</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <style>
-        div {
+        div.box {
           width: 100%;
           height: 500px;
           margin-bottom: 5px
@@ -26,13 +26,29 @@
         a {
           margin-right: 10px;
         }
+        .pagination {
+            display: inline-block;
+        }
+
+        .pagination a {
+            color: black;
+            float: left;
+            padding: 5px 5px;
+            text-decoration: none;
+        }
+
+        .pagination a.active {
+            background-color: gray;
+            color: white;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <body>
 <h1>Axelrod Stock Simulator</h1>
 <div>
-    <div class="left">
+    <div class="box left">
     <table>
         <thead>
         <tr>
@@ -44,18 +60,28 @@
         <tr th:if="${stocks.empty}">
             <td colspan="2"> No Stocks Available </td>
         </tr>
-        <tr th:each="stock : ${stocks}">
+        <tr th:each="stock, iStat : ${stocks}">
             <td><span th:text="${stock.ticker}"> </span></td>
             <td><span th:text="${stock.price}"> </span></td>
         </tr>
         </tbody>
     </table>
+    <div th:if="${stocks.totalPages > 0}" class="pagination"
+         th:each="pageNumber : ${pageNumbers}">
+        <a th:if="${userId == null}" th:href="@{/homepage(size=${stocks.size}, page=${pageNumber})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==stocks.number + 1} ? active"></a>
+        <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, size=${stocks.size}, page=${pageNumber})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==stocks.number + 1} ? active"></a>
+    </div>
+        <br>
     <a href="/homepage/create">Create Stock</a>
         <div hidden>
             <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
         </div>
     </div>
-    <div class="right">
+    <div class="box right">
         <table>
             <thead>
             <tr>
@@ -77,7 +103,7 @@
     </div>
 </div>
 <div>
-    <div th:if="${userId == null}" class="left">
+    <div th:if="${userId == null}" class="box left">
         <h3>Login</h3>
         <form action="#" th:action="@{/homepage/login}" th:object="${user}" method="post">
             <p>Username: <input type="text" th:field="*{username}" /></p>
@@ -85,7 +111,7 @@
             <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
         </form>
     </div>
-    <div th:if="${userId != null}" class="left">
+    <div th:if="${userId != null}" class="box left">
         <div class="left" style="border:0px">
         <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
         <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
@@ -114,7 +140,7 @@
             </table>
         </div>
     </div>
-    <div class="right">
+    <div class="box right">
         <div class="left" style="border:0px;">
             <table style="margin:auto; width:90%">
                 <caption><b>Current Buy Order</b></caption>

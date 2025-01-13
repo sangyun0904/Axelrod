@@ -52,7 +52,7 @@ public class MatchingExecutorPool {
             if (tickerList.size() <= idx) break;
             String t = tickerList.get(idx);
 
-            System.out.println(t);
+//            System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
                 Tuple maxPriceBuyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, -1, -1).getLast();
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
