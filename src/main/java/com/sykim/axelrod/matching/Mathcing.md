@@ -7,9 +7,8 @@
 - score : price - double
 - algorithm : Price/Time algorithm - 추후에 여러 알고리즘 비교 예정
 
-(출처 : Order matching system Wikipedia)
 ![img.png](img.png)
-
+(출처 : Order matching system Wikipedia)
 ## 매칭 시스템이 돌아가는 동안 http 요청 응덥아 지연되는 현상 발생 
 
 ### Threads
@@ -53,3 +52,11 @@
 
 ### 해결 1 
 한번에 진행되는 전체 매칭 시스템 작업을 나누어서 실행
+
+### 해결 2 
+**Spring Batch를 활용한 배치 처리**
+
+https://docs.spring.io/spring-batch/reference/index.html
+
+**General Batch Principles and Guidelines**
+1. 
