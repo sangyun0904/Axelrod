@@ -44,6 +44,9 @@ dependencies {
 
 	// csv
 	implementation 'com.opencsv:opencsv:5.5.2'
+
+	// datafaker for gatling scenario
+	gatlingImplementation 'net.datafaker:datafaker:2.4.2'
 }
 
 tasks.named('test') {
