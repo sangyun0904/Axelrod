@@ -4,7 +4,7 @@
     <title>Getting Started: Serving Web Content</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <style>
-        div {
+        div.box {
           width: 100%;
           height: 500px;
           margin-bottom: 5px
@@ -26,13 +26,29 @@
         a {
           margin-right: 10px;
         }
+        .pagination {
+            display: inline-block;
+        }
+
+        .pagination a {
+            color: black;
+            float: left;
+            padding: 5px 5px;
+            text-decoration: none;
+        }
+
+        .pagination a.active {
+            background-color: gray;
+            color: white;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <body>
 <h1>Axelrod Stock Simulator</h1>
 <div>
-    <div class="left">
+    <div class="box left">
     <table>
         <thead>
         <tr>
@@ -44,15 +60,28 @@
         <tr th:if="${stocks.empty}">
             <td colspan="2"> No Stocks Available </td>
         </tr>
-        <tr th:each="stock : ${stocks}">
+        <tr th:each="stock, iStat : ${stocks}">
             <td><span th:text="${stock.ticker}"> </span></td>
             <td><span th:text="${stock.price}"> </span></td>
         </tr>
         </tbody>
     </table>
-    <a href="/homepage/create">Create Stock</a>
+    <div th:if="${stocks.totalPages > 0}" class="pagination"
+         th:each="pageNumber : ${pageNumbers}">
+        <a th:if="${userId == null}" th:href="@{/homepage(size=${stocks.size}, page=${pageNumber})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==stocks.number + 1} ? active"></a>
+        <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, size=${stocks.size}, page=${pageNumber})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==stocks.number + 1} ? active"></a>
     </div>
-    <div class="right">
+        <br>
+    <a href="/homepage/create">Create Stock</a>
+        <div hidden>
+            <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+        </div>
+    </div>
+    <div class="box right">
         <table>
             <thead>
             <tr>
@@ -74,7 +103,7 @@
     </div>
 </div>
 <div>
-    <div th:if="${user.username == null}" class="left">
+    <div th:if="${userId == null}" class="box left">
         <h3>Login</h3>
         <form action="#" th:action="@{/homepage/login}" th:object="${user}" method="post">
             <p>Username: <input type="text" th:field="*{username}" /></p>
@@ -82,13 +111,84 @@
             <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
         </form>
     </div>
-    <div th:if="${user.username != null}" class="left">
-        <h3 th:text="'Hello ' + ${user.username} + '!'"></h3>
-        <p><a href="/homepage/buy">Buy Stock</a><a href="/homepage/sell">Sell Stock</a></p>
+    <div th:if="${userId != null}" class="box left">
+        <div class="left" style="border:0px">
+        <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
+        <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
         <a href="/homepage/logout">Log Out</a>
+        </div>
+        <div class="right" style="height:100%; border:0px;">
+            <table style="margin:auto; width:100%">
+                <caption><b>User Portfolio</b></caption>
+                <thead>
+                <tr>
+                    <th> StockId </th>
+                    <th> Quantity </th>
+                    <th> Average Price </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${buyOrderList.empty}">
+                    <td colspan="4"> No Buy Order </td>
+                </tr>
+                <tr th:each="pf : ${portfolios}">
+                    <td><span th:text="${pf.ticker}"> </span></td>
+                    <td><span th:text="${pf.quantity}"> </span></td>
+                    <td><span th:text="${pf.averagePrice}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="right">
-        <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+    <div class="box right">
+        <div class="left" style="border:0px;">
+            <table style="margin:auto; width:90%">
+                <caption><b>Current Buy Order</b></caption>
+                <thead>
+                <tr>
+                    <th> Ticker </th>
+                    <th> Quantity </th>
+                    <th> Price </th>
+                    <th> Player </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${buyOrderList.empty}">
+                    <td colspan="4" style="text-align:center;"> No Buy Order </td>
+                </tr>
+                <tr th:each="order : ${buyOrderList}">
+                    <td><span th:text="${order.ticker}"> </span></td>
+                    <td><span th:text="${order.quantity}"> </span></td>
+                    <td><span th:text="${order.price}"> </span></td>
+                    <td><span th:text="${order.playerId}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="right" style="border:0px;">
+            <table style="margin:auto; width:90%">
+                <caption><b>Current Sell Order</b></caption>
+                <thead>
+                <tr>
+                    <th> Ticker </th>
+                    <th> Quantity </th>
+                    <th> Price </th>
+                    <th> Player </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${sellOrderList.empty}">
+                    <td colspan="4" style="text-align:center;"> No Sell Order </td>
+                </tr>
+                <tr th:each="order : ${sellOrderList}">
+                    <td><span th:text="${order.ticker}"> </span></td>
+                    <td><span th:text="${order.quantity}"> </span></td>
+                    <td><span th:text="${order.price}"> </span></td>
+                    <td><span th:text="${order.playerId}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -101,7 +201,7 @@
       data: {
         labels: xValues,
         datasets: [{
-          fill: true,
+          fill: false,
           lineTension: 0,
           backgroundColor:"rgba(255,0,0,1.0)",
           borderColor: "rgba(255,0,0,0.1)",

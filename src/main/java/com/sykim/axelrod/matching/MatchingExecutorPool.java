@@ -6,15 +6,13 @@ import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,10 +25,11 @@ public class MatchingExecutorPool {
     @Autowired
     private MatchingService matchingService;
 
-    @Value("${spring.redis.host}")
-    private String REDIS_HOST; // Redis 호스트 주소
-    @Value("${spring.redis.port}")
-    private int REDIS_PORT;    // Redis 포트 번호
+    private final int LOOP_NUM=300;
+    private int stockMatchingLoopIndex = 0;
+
+    @Autowired
+    JedisPool jedisPool;
 
     private boolean systemRunning = true;
     @PreDestroy
@@ -40,14 +39,20 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 500)
     public void findMatch() {
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
-        JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
-        for (String t : tickerList) {
-            System.out.println(t);
+        System.out.println(tickerList.size() / LOOP_NUM);
+
+        for (int i=0; i < LOOP_NUM; i++) {
+            int idx = stockMatchingLoopIndex * LOOP_NUM + i;
+            if (tickerList.size() <= idx) break;
+            String t = tickerList.get(idx);
+
+//            System.out.println(t);
             try (Jedis jedis = jedisPool.getResource()) {
                 Tuple maxPriceBuyOrder = jedis.zrangeWithScores("orderbook:buy:" + t, -1, -1).getLast();
                 Tuple leastPriceSellOrder = jedis.zrangeWithScores("orderbook:sell:" + t, 0, 0).getFirst();
@@ -57,13 +62,14 @@ public class MatchingExecutorPool {
 //                System.out.println(e.getMessage());
             }
         }
+        stockMatchingLoopIndex = (stockMatchingLoopIndex + 1) % (tickerList.size() / LOOP_NUM + 1);
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
     }
 
     private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) {
         // TODO : - 주식 판매 금액이 구매 수량 금액보다 높으면 null 리턴
         //        - 판매 수량이 같거나 더 많으면 Transaction 생성 및 Player Portfolio 수정
         //        - 남은 주식 redis 에 다시 ZADD
-        JedisPool jedisPool = new JedisPool(REDIS_HOST, REDIS_PORT);
 
 
         // 구매 주문 가격이 판매 주문 가격보다 높거나 같으면 거래 채결

@@ -1,23 +1,34 @@
 package com.sykim.axelrod.hompage;
 
+import com.google.gson.Gson;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.matching.MatchingService;
-import com.sykim.axelrod.model.Player;
-import com.sykim.axelrod.model.Stock;
-import com.sykim.axelrod.model.Transaction;
-import com.sykim.axelrod.model.TransactionOrder;
+import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.resps.Tuple;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLDataException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 @RequestMapping("/homepage")
@@ -32,16 +43,63 @@ public class HomepageController {
     @Autowired
     MatchingService matchingService;
 
-    private Player user = new Player();
+    @Autowired
+    JedisPool jedisPool;
 
     @GetMapping("")
-    public String mainPage(Model model) {
+    public String mainPage(
+            @RequestParam(name = "userId", required = false) String userId,
+            @RequestParam("page") Optional<Integer> page,
+            @RequestParam("size") Optional<Integer> size,
+            Model model) {
+
+        int currentPage = page.orElse(1);
+        int pageSize = size.orElse(15);
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+
+        Page<Stock> stockPage = homepageService.findStockPaginated(PageRequest.of(currentPage - 1, pageSize));
+        model.addAttribute("stocks", stockPage);
+
+        int totalPages = stockPage.getTotalPages();
+        System.out.println("total pages : " + totalPages);
+        if (totalPages > 0) {
+            List<Integer> pageNumbers = IntStream.rangeClosed(currentPage, currentPage + 10)
+                    .boxed()
+                    .collect(Collectors.toList());
+            model.addAttribute("pageNumbers", pageNumbers);
+        }
+
         List<Stock> stockList = homepageService.getAllStocks();
-        model.addAttribute("stocks", stockList);
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
-        model.addAttribute("user", user);
-        System.out.println(user.getUsername());
+
+        List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
+        model.addAttribute("userId", userId);
+        model.addAttribute("user", new Player());
+        model.addAttribute("portfolios", userPFList);
+
+        List<TransactionOrder> buyOrderList = new ArrayList<>();
+        List<TransactionOrder> sellOrderList = new ArrayList<>();
+        for (Stock stock: stockList) {
+            Gson gson = new Gson();
+            try (Jedis jedis = jedisPool.getResource()) {
+                List<Tuple> buyOrderTupleList = jedis.zrangeWithScores("orderbook:buy:" + stock.getTicker(), 0, -1);
+                for (Tuple order: buyOrderTupleList) {
+                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
+                    buyOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.BUY));
+                }
+                List<Tuple> sellOrderTupleList = jedis.zrangeWithScores("orderbook:sell:" + stock.getTicker(), 0, -1);
+                for (Tuple order: sellOrderTupleList) {
+                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
+                    sellOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.SELL));
+                }
+            }
+        }
+
+        model.addAttribute("buyOrderList", buyOrderList);
+        model.addAttribute("sellOrderList", sellOrderList);
+
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
     }
 
@@ -79,8 +137,11 @@ public class HomepageController {
 
     @PostMapping("/login")
     public String loginStockResult(@ModelAttribute Player.PlayerLogin login, Model model) {
+        String userId = "";
+
         try {
-            user = userService.loginPlayer(login);
+            userService.loginPlayer(login);
+            return "redirect:/homepage?userId=" + login.username();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -89,40 +150,58 @@ public class HomepageController {
 
     @GetMapping("/logout")
     public String logoutStockResult(Model model) {
-        user = new Player();
         return "redirect:/homepage";
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(Model model) {
-        model.addAttribute("order", new Transaction());
+    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) throws IOException, CsvValidationException {
+        model.addAttribute("userId", userId);
+        model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
+
+        List<Stock.Diamond> dataList = new ArrayList<>();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/diamonds.csv").getFile())
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        csvReader.readNext();
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            dataList.add(new Stock.Diamond(Double.parseDouble(record[0]), Integer.parseInt(record[1])));
+        }
+
+        model.addAttribute("chartData", dataList);
+
+
         return "orderStock";
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
-        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
-        stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
-        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.BUY);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
-        return "redirect:/homepage";
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
+        return "redirect:/homepage?userId=" + order.playerId();
     }
 
     @GetMapping("/sell")
-    public String sellStockForm(Model model) {
-        model.addAttribute("order", new Transaction());
+    public String sellStockForm(@RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Sell");
         return "orderStock";
     }
 
     @PostMapping("/Sell")
-    public String sellStockResult(@ModelAttribute TransactionOrder.WebOrderRequest order, Model model) throws SQLDataException {
-        TransactionOrder.OrderRequest request = new TransactionOrder.OrderRequest(user.getUsername(), order.ticker(), order.quantity(), order.price());
-        stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
-        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(request, TransactionOrder.Type.SELL);
-        matchingService.bookStockOrder(newTransactionOrder.getId(), user.getUsername(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
-        return "redirect:/homepage";
+    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
+        TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
+        matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
+        return "redirect:/homepage?userId=" + order.playerId();
     }
 
 }
