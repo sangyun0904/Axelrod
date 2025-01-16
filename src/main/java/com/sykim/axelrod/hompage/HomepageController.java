@@ -5,6 +5,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,7 +182,7 @@ public class HomepageController {
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException {
         stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
@@ -197,7 +198,7 @@ public class HomepageController {
     }
 
     @PostMapping("/Sell")
-    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
+    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException {
         stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.SELL);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
