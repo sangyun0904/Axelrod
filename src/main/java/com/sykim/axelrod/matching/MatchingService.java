@@ -59,7 +59,6 @@ public class MatchingService {
         else throw new RuntimeException("order type 이 올바르지 않습니다.");
 
         try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
-            System.out.println("Connected to Redis!");
 
             // Redis 키: orderbook:type:<ticker>
             String orderKey = "orderbook:" + type + ":" + ticker;

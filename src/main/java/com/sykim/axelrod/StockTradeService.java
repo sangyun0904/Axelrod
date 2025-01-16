@@ -1,5 +1,6 @@
 package com.sykim.axelrod;
 
+import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Portfolio;
 import com.sykim.axelrod.model.Stock;
@@ -31,7 +32,7 @@ public class StockTradeService {
     private OrderRepository orderRepository;
 
     @Transactional
-    public Transaction issueStock(TransactionOrder.OrderRequest issuance) {
+    public Transaction issueStock(TransactionOrder.OrderRequest issuance) throws NotAvailableTickerException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(issuance.ticker());
 
         if (stockOrNull.isPresent()) {
@@ -52,9 +53,8 @@ public class StockTradeService {
             return transactionRepository.save(transaction);
         }
         else {
-//            throw new SQLDataException("Stock with " + ticker + " ticker doesn't exists");
+            throw new NotAvailableTickerException("Stock with " + issuance.ticker() + " ticker doesn't exists");
         }
-        return null;
     }
 
     @Transactional
@@ -64,7 +64,7 @@ public class StockTradeService {
     }
 
     @Transactional
-    public TransactionOrder createTransactionOrder(TransactionOrder.OrderRequest transactionOrder, TransactionOrder.Type type) throws SQLDataException {
+    public TransactionOrder createTransactionOrder(TransactionOrder.OrderRequest transactionOrder, TransactionOrder.Type type) throws NotAvailableTickerException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(transactionOrder.ticker());
 
         if (stockOrNull.isPresent()) {
@@ -72,7 +72,7 @@ public class StockTradeService {
             TransactionOrder order = new TransactionOrder(null, transactionOrder.playerId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
             return orderRepository.save(order);
         } else {
-            throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
+            throw new NotAvailableTickerException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
         }
     }
 
