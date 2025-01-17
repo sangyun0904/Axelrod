@@ -1,5 +1,7 @@
 package com.sykim.axelrod;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.model.Stock.StockCreate;
@@ -8,10 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class StockTradeService {
@@ -149,6 +154,38 @@ public class StockTradeService {
         }
 
         return true;
+    }
+
+    public List<Stock> getNasdaqStockListFromCSV() throws IOException, CsvValidationException {
+        List<Stock> nasdaqStockList = new ArrayList<>();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/nasdaq_screener_1736480783742.csv")).getFile()
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        String[] header = csvReader.readNext();
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < header.length; i++) {
+            headerMap.put(header[i], i);
+        }
+
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            nasdaqStockList.add(new Stock(
+                    null,
+                    record[headerMap.get("Symbol")],
+                    record[headerMap.get("Name")],
+                    "NASDAQ",
+                    record[headerMap.get("Sector")],
+                    record[headerMap.get("Industry")],
+                    Double.parseDouble(record[headerMap.get("Last Sale")].substring(1)),
+                    LocalDateTime.now()));
+        }
+
+        return nasdaqStockList;
     }
 }
 

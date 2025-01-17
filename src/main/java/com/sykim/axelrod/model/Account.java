@@ -23,4 +23,11 @@ public class Account {
     private String accountNum;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public record CreateAccount(String username, String bankName) {}
+
+    public Double changeBalance(Double change) {
+        this.balance = this.balance + change;
+        return this.balance;
+    }
 }

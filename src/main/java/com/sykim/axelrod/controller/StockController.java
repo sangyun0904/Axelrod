@@ -3,9 +3,11 @@ package com.sykim.axelrod.controller;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.matching.MatchingService;
+import com.sykim.axelrod.model.Bank;
 import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
@@ -32,6 +34,8 @@ public class StockController {
     private StockTradeService stockTradeService;
     @Autowired
     private MatchingService matchingService;
+    @Autowired
+    private AccountService accountService;
 
     @PostMapping("/issue")
     public Transaction issueStocks(
@@ -77,38 +81,16 @@ public class StockController {
 
     @GetMapping("/generateStock")
     public String generateStockData() throws IOException, CsvValidationException {
-
-        List<Stock> nasdaqStockList = new ArrayList<>();
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(
-                Objects.requireNonNull(classLoader.getResource("data/nasdaq_screener_1736480783742.csv").getFile())
-        );
-        FileReader fileReader = new FileReader(file);
-        CSVReader csvReader = new CSVReader(fileReader);
-
-        String[] header = csvReader.readNext();
-        Map<String, Integer> headerMap = new HashMap<>();
-        for (int i = 0; i < header.length; i++) {
-            headerMap.put(header[i], i);
-        }
-
-        String[] record;
-        while ((record = csvReader.readNext()) != null) {
-            nasdaqStockList.add(new Stock(
-                    null,
-                    record[headerMap.get("Symbol")],
-                    record[headerMap.get("Name")],
-                    "NASDAQ",
-                    record[headerMap.get("Sector")],
-                    record[headerMap.get("Industry")],
-                    Double.parseDouble(record[headerMap.get("Last Sale")].substring(1)),
-                    LocalDateTime.now()));
-        }
-
+        List<Stock> nasdaqStockList = stockTradeService.getNasdaqStockListFromCSV();
         stockTradeService.createStockByStockList(nasdaqStockList);
-
         return "Stock generated";
+    }
+
+    @GetMapping("/generateBank")
+    public String generateBankData() throws IOException, CsvValidationException {
+        List<Bank> bankList = accountService.getBankListFromCSV();
+        accountService.creteBankByList(bankList);
+        return "Bank generated";
     }
 
 }
