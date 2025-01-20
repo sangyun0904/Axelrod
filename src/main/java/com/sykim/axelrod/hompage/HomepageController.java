@@ -22,12 +22,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLDataException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -97,8 +93,8 @@ public class HomepageController {
             }
         }
 
-        model.addAttribute("buyOrderList", buyOrderList);
-        model.addAttribute("sellOrderList", sellOrderList);
+        model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
+        model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
@@ -155,29 +151,10 @@ public class HomepageController {
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) throws IOException, CsvValidationException {
+    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) {
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
-
-        List<Stock.Diamond> dataList = new ArrayList<>();
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(
-                Objects.requireNonNull(classLoader.getResource("data/diamonds.csv").getFile())
-        );
-        FileReader fileReader = new FileReader(file);
-        CSVReader csvReader = new CSVReader(fileReader);
-
-        csvReader.readNext();
-        String[] record;
-        while ((record = csvReader.readNext()) != null) {
-            dataList.add(new Stock.Diamond(Double.parseDouble(record[0]), Integer.parseInt(record[1])));
-        }
-
-        model.addAttribute("chartData", dataList);
-
-
         return "orderStock";
     }
 
@@ -203,6 +180,31 @@ public class HomepageController {
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
         return "redirect:/homepage?userId=" + order.playerId();
+    }
+
+    @GetMapping("/stock")
+    public String stockDetail(@RequestParam("ticker") Optional<String> ticker, Model model) throws IOException, CsvValidationException {
+        List<Stock.History> dataList = new ArrayList<>();
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/aapl-2.csv").getFile())
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        csvReader.readNext();
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            dataList.add(new Stock.History(record[0]
+                    , Double.parseDouble(record[1])
+                    , Double.parseDouble(record[2])
+                    , Double.parseDouble(record[3])
+                    , Double.parseDouble(record[4])
+                    , Double.parseDouble(record[5])
+                    , Long.parseLong(record[6])));
+        }
+        model.addAttribute("chartData", dataList);
+        return "stockPage";
     }
 
 }

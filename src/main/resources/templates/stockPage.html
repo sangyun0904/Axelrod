@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${ticker}"></title>
+    <script th:src="@{/d3.min.js}"></script>
+    <script th:src="@{/chart.js}" type='module'></script>
+</head>
+<body>
+    <script th:inline="javascript" type='module'>
+        import {
+            candlestickChart
+        } from '/chart.js';
+
+        let aapl = [[${chartData}]].slice(-200);
+
+        console.log("java aapl:")
+        console.log(aapl)
+        console.log(Date.now())
+
+         const chart = candlestickChart(aapl, {
+          yLabel: "↑ Price ($)",
+          width: 1000,
+          height: 500
+        });
+
+        d3.select('body').append(() => chart);
+    </script>
+</body>
+</html>

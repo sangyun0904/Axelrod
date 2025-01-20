@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,5 +37,5 @@ public class Stock {
 
     public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
 
-    public record Diamond(Double carat, int price) {}
+    public record History(String date, Double open, Double high, Double low, Double close, Double adjClose, Long volume) {}
 }
