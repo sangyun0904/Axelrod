@@ -3,6 +3,7 @@ package com.sykim.axelrod.hompage;
 import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
@@ -39,6 +40,8 @@ public class HomepageController {
     UserService userService;
     @Autowired
     MatchingService matchingService;
+    @Autowired
+    AccountService accountService;
 
     @Autowired
     JedisPool jedisPool;
@@ -74,6 +77,9 @@ public class HomepageController {
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
         model.addAttribute("portfolios", userPFList);
+
+        if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
+        else model.addAttribute("accounts", accountService.getAllAccounts());
 
         List<TransactionOrder> buyOrderList = new ArrayList<>();
         List<TransactionOrder> sellOrderList = new ArrayList<>();
@@ -205,6 +211,14 @@ public class HomepageController {
         }
         model.addAttribute("chartData", dataList);
         return "stockPage";
+    }
+
+    @GetMapping("/create/account")
+    public String createAccount(@RequestParam("userId") String userId, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("Banks", accountService.getAllBanksList());
+
+        return "createAccount";
     }
 
 }

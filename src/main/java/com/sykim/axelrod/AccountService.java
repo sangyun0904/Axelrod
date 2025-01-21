@@ -11,9 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -69,12 +69,26 @@ public class AccountService {
         return bankList;
     }
 
-    public void creteBankByList(List<Bank> bankList) {
+    public void createBankByList(List<Bank> bankList) {
         bankRepository.saveAll(bankList);
+    }
+    public List<Bank> getAllBanksList() { return bankRepository.findAll(); }
+    public Account createAccount(Account.CreateAccount createAccount) {
+        Account newAccount = new Account(null, 0d, createAccount.username(), generateAccountNum(createAccount.bankName()), LocalDateTime.now(), LocalDateTime.now());
+        return accountRepository.save(newAccount);
     }
 
     private String checkBOM(String input) {
         if (input.startsWith("\uFEFF")) return input.substring(1);
         else return input;
+    }
+
+    private String generateAccountNum(String s) {
+        // TODO 계좌번호 생성 추가
+        return "";
+    }
+
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
     }
 }

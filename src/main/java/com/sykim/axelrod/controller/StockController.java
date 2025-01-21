@@ -1,7 +1,6 @@
 package com.sykim.axelrod.controller;
 
 
-import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
@@ -19,12 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLDataException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -89,7 +83,7 @@ public class StockController {
     @GetMapping("/generateBank")
     public String generateBankData() throws IOException, CsvValidationException {
         List<Bank> bankList = accountService.getBankListFromCSV();
-        accountService.creteBankByList(bankList);
+        accountService.createBankByList(bankList);
         return "Bank generated";
     }
 
