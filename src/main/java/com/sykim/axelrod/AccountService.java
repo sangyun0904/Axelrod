@@ -3,8 +3,10 @@ package com.sykim.axelrod;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
+import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.model.Account;
 import com.sykim.axelrod.model.Bank;
+import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.repository.AccountRepository;
 import com.sykim.axelrod.repository.BankRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,5 +98,12 @@ public class AccountService {
 
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
+    }
+
+    public boolean checkAccountBalance(TransactionOrder.OrderRequest order) throws NotEnoughBalanceException {
+        List<Account> accountList = accountRepository.findByUsername(order.playerId());
+        Double orderPrice = order.price() * order.quantity();
+        if (accountList.get(0).getBalance() >= orderPrice) return true;
+        else throw new NotEnoughBalanceException("Not enough money in yout account");
     }
 }

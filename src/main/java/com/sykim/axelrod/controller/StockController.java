@@ -54,6 +54,7 @@ public class StockController {
     public ResponseEntity crateBuyStockOrder(
             @RequestBody TransactionOrder.OrderRequest transactionOrder
     ) throws NotAvailableTickerException {
+        //TODO: Account Balance 확인
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
         return ResponseEntity.ok("success!");

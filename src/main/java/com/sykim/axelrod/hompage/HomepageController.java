@@ -7,6 +7,7 @@ import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
+import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,7 +106,7 @@ public class HomepageController {
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
-        model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
+        model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
@@ -170,7 +171,9 @@ public class HomepageController {
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException {
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException, NotEnoughBalanceException {
+        //TODO: Account Balance 확인
+        accountService.checkAccountBalance(order);
         stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
