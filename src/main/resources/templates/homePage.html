@@ -120,7 +120,7 @@
                     <tr><th>Account Number</th><th>Balance</th></tr>
                 </thead>
                 <tbody>
-                    <tr th:each="account: ${accounts}"><span th:text="${account.accountNum}"></span><span th:text="${account.balance}"></span></tr>
+                    <tr th:each="account: ${accounts}"><td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td></tr>
                 </tbody>
             </table>
             <p><a href="/create/account">Create Account</a><a href="/homepage/logout">Log Out</a></p>

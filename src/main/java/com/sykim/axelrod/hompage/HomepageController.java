@@ -216,9 +216,16 @@ public class HomepageController {
     @GetMapping("/create/account")
     public String createAccount(@RequestParam("userId") String userId, Model model) {
         model.addAttribute("userId", userId);
-        model.addAttribute("Banks", accountService.getAllBanksList());
-
+        List<Bank> bankList = accountService.getAllBanksList();
+        model.addAttribute("banks", bankList.subList(0, 100));
+        model.addAttribute("createAccount", new Account.CreateAccount("", ""));
         return "createAccount";
+    }
+
+    @PostMapping("/create/account")
+    public String createAccountResult(@ModelAttribute Account.CreateAccount createAccount, Model model) {
+        Account account = accountService.createAccount(createAccount);
+        return "redirect:/homepage?userId=" + createAccount.playerId();
     }
 
 }

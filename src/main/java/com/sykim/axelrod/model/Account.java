@@ -24,7 +24,7 @@ public class Account {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public record CreateAccount(String username, String bankName) {}
+    public record CreateAccount(String playerId, String bankName) {}
 
     public Double changeBalance(Double change) {
         this.balance = this.balance + change;

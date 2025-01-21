@@ -59,9 +59,9 @@ public class AccountService {
         while((record = csvReader.readNext()) != null) {
             bankList.add(new Bank(
                     null,
-                    checkBOM(record[headerMap.get("은행명")]) + checkBOM(record[headerMap.get("점포명")]),
+                    checkBOM(record[headerMap.get("은행명")]).strip() + " " + checkBOM(record[headerMap.get("점포명")]).strip(),
                     checkBOM(record[headerMap.get("은행코드")]),
-                    checkBOM(record[headerMap.get("주소")]),
+                    checkBOM(record[headerMap.get("주소")]).strip(),
                     checkBOM(record[headerMap.get("전화번호")]
                     )));
         }
@@ -74,7 +74,7 @@ public class AccountService {
     }
     public List<Bank> getAllBanksList() { return bankRepository.findAll(); }
     public Account createAccount(Account.CreateAccount createAccount) {
-        Account newAccount = new Account(null, 0d, createAccount.username(), generateAccountNum(createAccount.bankName()), LocalDateTime.now(), LocalDateTime.now());
+        Account newAccount = new Account(null, 0d, createAccount.playerId(), generateAccountNum(createAccount.bankName()), LocalDateTime.now(), LocalDateTime.now());
         return accountRepository.save(newAccount);
     }
 
