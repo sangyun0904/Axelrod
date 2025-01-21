@@ -62,8 +62,9 @@ public class AccountService {
                     checkBOM(record[headerMap.get("은행명")]).strip() + " " + checkBOM(record[headerMap.get("점포명")]).strip(),
                     checkBOM(record[headerMap.get("은행코드")]),
                     checkBOM(record[headerMap.get("주소")]).strip(),
-                    checkBOM(record[headerMap.get("전화번호")]
-                    )));
+                    checkBOM(record[headerMap.get("전화번호")]),
+                    0
+            ));
         }
 
         return bankList;
@@ -83,9 +84,14 @@ public class AccountService {
         else return input;
     }
 
-    private String generateAccountNum(String s) {
+    private String generateAccountNum(String bankName) {
         // TODO 계좌번호 생성 추가
-        return "";
+        Bank bank = bankRepository.findByName(bankName);
+        String accountSerial = String.format("%07d", bank.nextSerialNum());
+        Random rand = new Random();
+        String newAccountNum = bank.getCode().substring(0, 3) + "-" + bank.getCode().substring(3) + "-" + accountSerial.substring(0, 4) + "-" + accountSerial.substring(4) + rand.nextInt(0, 9);
+        bankRepository.save(bank);
+        return newAccountNum;
     }
 
     public List<Account> getAllAccounts() {

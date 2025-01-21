@@ -123,7 +123,7 @@
                     <tr th:each="account: ${accounts}"><td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td></tr>
                 </tbody>
             </table>
-            <p><a href="/create/account">Create Account</a><a href="/homepage/logout">Log Out</a></p>
+            <p><a th:href="'/homepage/create/account?userId=' + ${userId}">Create Account</a><a href="/homepage/logout">Log Out</a></p>
         </div>
         <div class="right" style="height:100%; border:0px;">
             <table style="margin:auto; width:100%">

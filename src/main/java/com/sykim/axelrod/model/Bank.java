@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Getter
@@ -19,4 +20,10 @@ public class Bank {
     private String code;
     private String address;
     private String phone;
+    @ColumnDefault("0")
+    private Integer accountSerialNum;
+
+    public Integer nextSerialNum() {
+        return this.accountSerialNum++;
+    }
 }

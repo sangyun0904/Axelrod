@@ -61,28 +61,32 @@ public class HomepageController {
         model.addAttribute("stocks", stockPage);
 
         int totalPages = stockPage.getTotalPages();
-        System.out.println("total pages : " + totalPages);
         if (totalPages > 0) {
             List<Integer> pageNumbers = IntStream.rangeClosed(currentPage, currentPage + 10)
                     .boxed()
                     .collect(Collectors.toList());
             model.addAttribute("pageNumbers", pageNumbers);
         }
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
 
         List<Stock> stockList = homepageService.getAllStocks();
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
         model.addAttribute("portfolios", userPFList);
 
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
         else model.addAttribute("accounts", accountService.getAllAccounts());
 
         List<TransactionOrder> buyOrderList = new ArrayList<>();
         List<TransactionOrder> sellOrderList = new ArrayList<>();
+
+        // TODO : NASDAQ 주식 전부 돌면서 orderbook:buy, orderbook:sell 주문 리스트 가져오는 시간 줄이기 현재 1.5초 ~ 2초
         for (Stock stock: stockList) {
             Gson gson = new Gson();
             try (Jedis jedis = jedisPool.getResource()) {
@@ -99,6 +103,7 @@ public class HomepageController {
             }
         }
 
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
 
