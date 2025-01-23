@@ -9,6 +9,7 @@ import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
+import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,9 +44,8 @@ public class HomepageController {
     MatchingService matchingService;
     @Autowired
     AccountService accountService;
-
     @Autowired
-    JedisPool jedisPool;
+    TransactionOrderListComponent transactionOrderListComponent;
 
     @GetMapping("")
     public String mainPage(
@@ -70,7 +70,6 @@ public class HomepageController {
         }
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
 
-        List<Stock> stockList = homepageService.getAllStocks();
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
@@ -84,27 +83,12 @@ public class HomepageController {
         if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
         else model.addAttribute("accounts", accountService.getAllAccounts());
 
-        List<TransactionOrder> buyOrderList = new ArrayList<>();
-        List<TransactionOrder> sellOrderList = new ArrayList<>();
-
         // TODO : NASDAQ 주식 전부 돌면서 orderbook:buy, orderbook:sell 주문 리스트 가져오는 시간 줄이기 현재 1.5초 ~ 2초
-        for (Stock stock: stockList) {
-            Gson gson = new Gson();
-            try (Jedis jedis = jedisPool.getResource()) {
-                List<Tuple> buyOrderTupleList = jedis.zrangeWithScores("orderbook:buy:" + stock.getTicker(), 0, -1);
-                for (Tuple order: buyOrderTupleList) {
-                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
-                    buyOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.BUY));
-                }
-                List<Tuple> sellOrderTupleList = jedis.zrangeWithScores("orderbook:sell:" + stock.getTicker(), 0, -1);
-                for (Tuple order: sellOrderTupleList) {
-                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
-                    sellOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.SELL));
-                }
-            }
-        }
-
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+        // Mac에선 원래 0.7초
+        // => order list를 가지고 있는 bean 객체를 따로 생성하여 매번 화면이 랜더링 될때마다 거래 주문 리스트를 전부 긁어오는 시간을 줄임
+        // 바뀐후 시간 : Mac 에서 0.1초
+        List<TransactionOrder> buyOrderList = transactionOrderListComponent.buyOrderList;
+        List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 

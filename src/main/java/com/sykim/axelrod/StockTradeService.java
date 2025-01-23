@@ -2,6 +2,7 @@ package com.sykim.axelrod;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.model.Stock.StockCreate;
@@ -31,6 +32,8 @@ public class StockTradeService {
     private TransactionRepository transactionRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private TransactionOrderListComponent transactionOrderListComponent;
 
     @Transactional
     public Transaction issueStock(TransactionOrder.OrderRequest issuance) throws NotAvailableTickerException {
@@ -71,6 +74,9 @@ public class StockTradeService {
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
             TransactionOrder order = new TransactionOrder(null, transactionOrder.playerId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
+            if (type == TransactionOrder.Type.BUY) transactionOrderListComponent.buyOrderList.add(order);
+            else transactionOrderListComponent.sellOrderList.add(order);
+
             return orderRepository.save(order);
         } else {
             throw new NotAvailableTickerException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
