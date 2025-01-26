@@ -220,4 +220,10 @@ public class HomepageController {
         return "redirect:/homepage?userId=" + createAccount.playerId();
     }
 
+    @GetMapping("/deposit")
+    public String depositMoney(@RequestParam("accountNum") String accountNum, Model model) {
+        model.addAttribute("changeBalance", new Account.ChangeBalance("", 1, 0d));
+        return "changeBalance";
+    }
+
 }

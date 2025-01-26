@@ -84,7 +84,7 @@ public class StockTradeService {
     }
 
     @Transactional
-    public synchronized void createTransaction(String ticker, Double price, Long quantity, String sellPlayer, String buyPlayer) {
+    public void createTransaction(String ticker, Double price, Long quantity, String sellPlayer, String buyPlayer) {
         Stock stock = stockRepository.findByTicker(ticker).get();
 
         Transaction transaction = new Transaction(null, sellPlayer, ticker, quantity, price, Transaction.Type.SELL, LocalDate.now());

@@ -30,7 +30,7 @@ public class AccountService {
         return accountRepository.findByUsername(username);
     }
 
-    public Account changeAccountBalance(String accountNum, Double change) throws AccountDoseNotExistException {
+    public Account changeAccountBalance(String accountNum, Double change) throws AccountDoseNotExistException, NotEnoughBalanceException {
         Optional<Account> accountOrNUll = accountRepository.findByAccountNum(accountNum);
 
         if (accountOrNUll.isEmpty()) throw new AccountDoseNotExistException("Account By account num : " + accountNum + " Not Found!");

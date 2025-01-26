@@ -1,5 +1,6 @@
 package com.sykim.axelrod.model;
 
+import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,7 +27,12 @@ public class Account {
 
     public record CreateAccount(String playerId, String bankName) {}
 
-    public Double changeBalance(Double change) {
+    public record ChangeBalance(String accountNum, Integer type, Double amount) {}
+
+    public Double changeBalance(Double change) throws NotEnoughBalanceException {
+        if (this.balance + change < 0)
+            throw new NotEnoughBalanceException("Not Enough Money in the account to withdraw " + change * (-1) + " $");
+
         this.balance = this.balance + change;
         return this.balance;
     }

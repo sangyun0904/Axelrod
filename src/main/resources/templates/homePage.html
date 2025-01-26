@@ -117,10 +117,14 @@
             <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
             <table>
                 <thead>
-                    <tr><th>Account Number</th><th>Balance</th></tr>
+                    <tr><th style="text-align: left">Account Number</th><th style="text-align: left">Balance</th></tr>
                 </thead>
                 <tbody>
-                    <tr th:each="account: ${accounts}"><td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td></tr>
+                    <tr th:each="account: ${accounts}">
+                        <td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td>
+                        <td><a th:href="'/homepage/deposit?accountNum=' + ${account.accountNum}">Add balance</a></td>
+                        <td><a th:href="'/homepage/withdrawal?accountNum=' + ${account.accountNum}">Withdraw balance</a></td>
+                    </tr>
                 </tbody>
             </table>
             <p><a th:href="'/homepage/create/account?userId=' + ${userId}">Create Account</a><a href="/homepage/logout">Log Out</a></p>
