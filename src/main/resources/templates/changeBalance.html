@@ -2,10 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text=" ${type} Money"></title>
+    <title th:text=" ${type} + ' money'"></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-    <form action="#" th:action="'/homepage/' + ${type}" th:object="{changeBalance"
+    <h1  th:text=" ${type} + ' money'"></h1>
+    <form action="#" th:action="'/homepage/' + ${type}" th:object="${changeBalance}" method="post">
+        <p><input hidden type="text" name="userId" th:value="${userId}"/> </p>
+        <p><input hidden type="text" name="accountNum" th:value="${accountNum}"/> </p>
+        <p><input hidden type="text" name="type" th:value="${changeBalance.type}"/> </p>
+        <p><input type="number" min="0" name="amount"/> </p>
+        <p><input type="submit" value="Submit"/> <input type="reset" value="Reset"/> </p>
+    </form>
 </body>
 </html>

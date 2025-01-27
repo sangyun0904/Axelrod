@@ -6,6 +6,7 @@ import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
@@ -221,9 +222,35 @@ public class HomepageController {
     }
 
     @GetMapping("/deposit")
-    public String depositMoney(@RequestParam("accountNum") String accountNum, Model model) {
-        model.addAttribute("changeBalance", new Account.ChangeBalance("", 1, 0d));
+    public String depositMoney(@RequestParam("userId") String userId, @RequestParam("accountNum") String accountNum, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("accountNum", accountNum);
+        model.addAttribute("changeBalance", new Account.ChangeBalance("", "", 1, 0d));
+        model.addAttribute("type", "deposit");
         return "changeBalance";
+    }
+
+    @PostMapping("/deposit")
+    public String depositMoneyResult(@ModelAttribute Account.ChangeBalance changeBalance, Model model) throws NotEnoughBalanceException, AccountDoseNotExistException {
+        System.out.println(changeBalance);
+        accountService.changeAccountBalance(changeBalance.accountNum(), changeBalance.amount() * changeBalance.type());
+        return "redirect:/homepage?userId=" + changeBalance.userId();
+    }
+
+    @GetMapping("/withdrawal")
+    public String withdrawMoney(@RequestParam("userId") String userId, @RequestParam("accountNum") String accountNum, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("accountNum", accountNum);
+        model.addAttribute("changeBalance", new Account.ChangeBalance("", "", -1, 0d));
+        model.addAttribute("type", "withdrawal");
+        return "changeBalance";
+    }
+
+    @PostMapping("/withdrawal")
+    public String withdrawMoneyResult(@ModelAttribute Account.ChangeBalance changeBalance, Model model) throws NotEnoughBalanceException, AccountDoseNotExistException {
+        System.out.println(changeBalance);
+        accountService.changeAccountBalance(changeBalance.accountNum(), changeBalance.amount() * changeBalance.type());
+        return "redirect:/homepage?userId=" + changeBalance.userId();
     }
 
 }

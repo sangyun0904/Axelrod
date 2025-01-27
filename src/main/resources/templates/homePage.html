@@ -122,8 +122,8 @@
                 <tbody>
                     <tr th:each="account: ${accounts}">
                         <td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td>
-                        <td><a th:href="'/homepage/deposit?accountNum=' + ${account.accountNum}">Add balance</a></td>
-                        <td><a th:href="'/homepage/withdrawal?accountNum=' + ${account.accountNum}">Withdraw balance</a></td>
+                        <td><a th:href="'/homepage/deposit?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Add balance</a></td>
+                        <td><a th:href="'/homepage/withdrawal?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Withdraw balance</a></td>
                     </tr>
                 </tbody>
             </table>

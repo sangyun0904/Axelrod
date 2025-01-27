@@ -27,11 +27,11 @@ public class Account {
 
     public record CreateAccount(String playerId, String bankName) {}
 
-    public record ChangeBalance(String accountNum, Integer type, Double amount) {}
+    public record ChangeBalance(String userId, String accountNum, Integer type, Double amount) {}
 
     public Double changeBalance(Double change) throws NotEnoughBalanceException {
         if (this.balance + change < 0)
-            throw new NotEnoughBalanceException("Not Enough Money in the account to withdraw " + change * (-1) + " $");
+            throw new NotEnoughBalanceException("Not Enough Money in the account to withdraw " + change * (-1) + "$");
 
         this.balance = this.balance + change;
         return this.balance;
