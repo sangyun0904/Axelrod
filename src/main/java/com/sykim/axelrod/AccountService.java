@@ -11,6 +11,7 @@ import com.sykim.axelrod.repository.AccountRepository;
 import com.sykim.axelrod.repository.BankRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileReader;
@@ -30,8 +31,9 @@ public class AccountService {
         return accountRepository.findByUsername(username);
     }
 
+    @Transactional
     public Account changeAccountBalance(String accountNum, Double change) throws AccountDoseNotExistException, NotEnoughBalanceException {
-        Optional<Account> accountOrNUll = accountRepository.findByAccountNum(accountNum);
+        Optional<Account> accountOrNUll = accountRepository.findByAccountNumForUpdate(accountNum);
 
         if (accountOrNUll.isEmpty()) throw new AccountDoseNotExistException("Account By account num : " + accountNum + " Not Found!");
 
@@ -41,6 +43,7 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
+    @Transactional
     public List<Bank> getBankListFromCSV() throws IOException, CsvValidationException {
         List<Bank> bankList = new ArrayList<>();
 
@@ -72,20 +75,25 @@ public class AccountService {
         return bankList;
     }
 
+    @Transactional
     public void createBankByList(List<Bank> bankList) {
         bankRepository.saveAll(bankList);
     }
+    @Transactional
     public List<Bank> getAllBanksList() { return bankRepository.findAll(); }
+    @Transactional
     public Account createAccount(Account.CreateAccount createAccount) {
         Account newAccount = new Account(null, 0d, createAccount.playerId(), generateAccountNum(createAccount.bankName()), LocalDateTime.now(), LocalDateTime.now());
         return accountRepository.save(newAccount);
     }
 
+    @Transactional
     private String checkBOM(String input) {
         if (input.startsWith("\uFEFF")) return input.substring(1);
         else return input;
     }
 
+    @Transactional
     private String generateAccountNum(String bankName) {
         // TODO 계좌번호 생성 추가
         Bank bank = bankRepository.findByName(bankName);
@@ -96,10 +104,12 @@ public class AccountService {
         return newAccountNum;
     }
 
+    @Transactional
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
 
+    @Transactional
     public boolean checkAccountBalance(TransactionOrder.OrderRequest order) throws NotEnoughBalanceException {
         List<Account> accountList = accountRepository.findByUsername(order.playerId());
         Double orderPrice = order.price() * order.quantity();

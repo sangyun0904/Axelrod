@@ -39,7 +39,7 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-//    @Scheduled(fixedRate = 500)
+    @Scheduled(fixedRate = 500)
     public void findMatch() {
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
