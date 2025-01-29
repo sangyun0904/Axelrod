@@ -1,6 +1,5 @@
 package com.sykim.axelrod.hompage;
 
-import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
@@ -13,19 +12,17 @@ import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.resps.Tuple;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,24 +33,27 @@ import java.util.stream.IntStream;
 public class HomepageController {
 
     @Autowired
-    HomepageService homepageService;
+    private HomepageService homepageService;
     @Autowired
-    StockTradeService stockTradeService;
+    private StockTradeService stockTradeService;
     @Autowired
-    UserService userService;
+    private UserService userService;
     @Autowired
-    MatchingService matchingService;
+    private MatchingService matchingService;
     @Autowired
-    AccountService accountService;
+    private AccountService accountService;
     @Autowired
-    TransactionOrderListComponent transactionOrderListComponent;
+    private TransactionOrderListComponent transactionOrderListComponent;
+
+    @Value("${alphavantage.key}")
+    private String ALPHA_VANTAGE_API_KEY;
 
     @GetMapping("")
     public String mainPage(
             @RequestParam(name = "userId", required = false) String userId,
             @RequestParam("page") Optional<Integer> page,
             @RequestParam("size") Optional<Integer> size,
-            Model model) {
+            Model model) throws IOException {
 
         int currentPage = page.orElse(1);
         int pageSize = size.orElse(15);
@@ -94,6 +94,8 @@ public class HomepageController {
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+
+        getStockData("AA");
         return "homePage";
     }
 
@@ -260,6 +262,34 @@ public class HomepageController {
         System.out.println(changeBalance);
         accountService.changeAccountBalance(changeBalance.accountNum(), changeBalance.amount() * changeBalance.type());
         return "redirect:/homepage?userId=" + changeBalance.userId();
+    }
+
+    private void getStockData(String ticker) throws IOException {
+
+        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=" + ALPHA_VANTAGE_API_KEY);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+
+        StringBuilder fullResponseBuilder = new StringBuilder();
+
+        System.out.println("ALPHA VANTAGE RESPONSE : ");
+
+        Reader streamReader = null;
+        streamReader = new InputStreamReader(con.getInputStream());
+
+        BufferedReader in = new BufferedReader(streamReader);
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+
+        in.close();
+
+        fullResponseBuilder.append("Response: ")
+                .append(content);
+
+        System.out.println(fullResponseBuilder);
     }
 
 }
