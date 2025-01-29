@@ -5,8 +5,22 @@
     <title th:text="${ticker}"></title>
     <script th:src="@{/d3.min.js}"></script>
     <script th:src="@{/chart.js}" type='module'></script>
+    <style>
+        main {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
 </head>
 <body>
+    <h1 th:text="${ticker}"></h1>
+    <div id="container"></div>
+    <div>
+        <tr th:if="${userId != ''}">
+            <p><a th:href="'/homepage/buy?ticker=' + ${ticker} + '&userId=' + ${userId}">Buy Stock</a> <a th:href="'/homepage/sell?ticker=' + ${ticker} + '&userId=' + ${userId}">Sell Stock</a></p>
+        </tr>
+    </div>
+
     <script th:inline="javascript" type='module'>
         import {
             candlestickChart
@@ -24,7 +38,7 @@
           height: 500
         });
 
-        d3.select('body').append(() => chart);
+        container.append(chart);
     </script>
 </body>
 </html>

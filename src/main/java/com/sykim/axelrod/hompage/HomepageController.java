@@ -148,7 +148,8 @@ public class HomepageController {
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) {
+    public String buyStockForm(@RequestParam(value = "ticker") String ticker, @RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("ticker", ticker);
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
@@ -166,7 +167,8 @@ public class HomepageController {
     }
 
     @GetMapping("/sell")
-    public String sellStockForm(@RequestParam(value = "userId") String userId, Model model) {
+    public String sellStockForm(@RequestParam(value = "ticker") String ticker, @RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("ticker", ticker);
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Sell");
@@ -182,7 +184,7 @@ public class HomepageController {
     }
 
     @GetMapping("/stock")
-    public String stockDetail(@RequestParam("ticker") Optional<String> ticker, Model model) throws IOException, CsvValidationException {
+    public String stockDetail(@RequestParam("ticker") Optional<String> ticker,@RequestParam("userId") Optional<String> userId, Model model) throws IOException, CsvValidationException {
         List<Stock.History> dataList = new ArrayList<>();
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(
@@ -203,6 +205,13 @@ public class HomepageController {
                     , Long.parseLong(record[6])));
         }
         model.addAttribute("chartData", dataList);
+        if (userId.isPresent()) {
+            System.out.println("userId : " + userId.get());
+            model.addAttribute("userId", userId.get());
+        }
+        if (ticker.isPresent()){
+            model.addAttribute("ticker", ticker.get());
+        }
         return "stockPage";
     }
 
