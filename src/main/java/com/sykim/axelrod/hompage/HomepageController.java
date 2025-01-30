@@ -1,5 +1,6 @@
 package com.sykim.axelrod.hompage;
 
+import com.google.gson.JsonObject;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
@@ -11,6 +12,8 @@ import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -94,8 +97,6 @@ public class HomepageController {
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
-
-        getStockData("AA");
         return "homePage";
     }
 
@@ -186,7 +187,7 @@ public class HomepageController {
     }
 
     @GetMapping("/stock")
-    public String stockDetail(@RequestParam("ticker") Optional<String> ticker,@RequestParam("userId") Optional<String> userId, Model model) throws IOException, CsvValidationException {
+    public String stockDetail(@RequestParam("ticker") String ticker,@RequestParam("userId") Optional<String> userId, Model model) throws IOException, CsvValidationException {
         List<Stock.History> dataList = new ArrayList<>();
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(
@@ -206,14 +207,14 @@ public class HomepageController {
                     , Double.parseDouble(record[5])
                     , Long.parseLong(record[6])));
         }
+        dataList = getStockData(ticker);
         model.addAttribute("chartData", dataList);
         if (userId.isPresent()) {
             System.out.println("userId : " + userId.get());
             model.addAttribute("userId", userId.get());
         }
-        if (ticker.isPresent()){
-            model.addAttribute("ticker", ticker.get());
-        }
+        model.addAttribute("ticker", ticker);
+
         return "stockPage";
     }
 
@@ -264,16 +265,14 @@ public class HomepageController {
         return "redirect:/homepage?userId=" + changeBalance.userId();
     }
 
-    private void getStockData(String ticker) throws IOException {
+    private List<Stock.History> getStockData(String ticker) throws IOException {
 
-        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=" + ALPHA_VANTAGE_API_KEY);
+//        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + ticker +"&apikey=" + ALPHA_VANTAGE_API_KEY);
+        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
 
         StringBuilder fullResponseBuilder = new StringBuilder();
-
-        System.out.println("ALPHA VANTAGE RESPONSE : ");
-
         Reader streamReader = null;
         streamReader = new InputStreamReader(con.getInputStream());
 
@@ -286,10 +285,30 @@ public class HomepageController {
 
         in.close();
 
-        fullResponseBuilder.append("Response: ")
-                .append(content);
+        fullResponseBuilder.append(content);
 
-        System.out.println(fullResponseBuilder);
+        List<Stock.History> dataList = new ArrayList<>();
+        String data = fullResponseBuilder.toString();
+
+        System.out.println(data);
+        JSONObject jsonObject = new JSONObject(data).getJSONObject("Time Series (Daily)");
+
+        JSONArray keys = jsonObject.names();
+
+        for (int i = 0; i < keys.length(); i++) {
+            String key = keys.getString(i);
+
+            dataList.add(new Stock.History(key
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("1. open"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("2. high"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("3. low"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
+                    , Long.parseLong(jsonObject.getJSONObject(key).getString("5. volume"))));
+
+        }
+
+        return dataList;
     }
 
 }
