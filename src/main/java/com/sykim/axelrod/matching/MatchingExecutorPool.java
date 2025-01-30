@@ -30,6 +30,8 @@ public class MatchingExecutorPool {
 
     @Autowired
     JedisPool jedisPool;
+    @Autowired
+    TransactionOrderListComponent transactionOrderListComponent;
 
     private boolean systemRunning = true;
     @PreDestroy
@@ -39,7 +41,7 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-//    @Scheduled(fixedRate = 500)
+    @Scheduled(fixedRate = 500)
     public void findMatch() {
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
@@ -99,6 +101,7 @@ public class MatchingExecutorPool {
             }
 
             stockTradeService.updateStockPrice(ticker, transactionPrice);
+            transactionOrderListComponent.reloadOrderData();
         }
         return null;
     }
