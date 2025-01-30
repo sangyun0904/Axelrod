@@ -1,20 +1,23 @@
 package com.sykim.axelrod;
 
-import com.sykim.axelrod.model.TransactionOrder;
-import com.sykim.axelrod.model.Portfolio;
-import com.sykim.axelrod.model.Stock;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.matching.TransactionOrderListComponent;
+import com.sykim.axelrod.model.*;
+import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.model.Stock.StockCreate;
-import com.sykim.axelrod.model.Transaction;
 import com.sykim.axelrod.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLDataException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class StockTradeService {
@@ -29,9 +32,11 @@ public class StockTradeService {
     private TransactionRepository transactionRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private TransactionOrderListComponent transactionOrderListComponent;
 
     @Transactional
-    public Transaction issueStock(TransactionOrder.OrderRequest issuance) {
+    public Transaction issueStock(TransactionOrder.OrderRequest issuance) throws NotAvailableTickerException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(issuance.ticker());
 
         if (stockOrNull.isPresent()) {
@@ -52,9 +57,8 @@ public class StockTradeService {
             return transactionRepository.save(transaction);
         }
         else {
-//            throw new SQLDataException("Stock with " + ticker + " ticker doesn't exists");
+            throw new NotAvailableTickerException("Stock with " + issuance.ticker() + " ticker doesn't exists");
         }
-        return null;
     }
 
     @Transactional
@@ -64,20 +68,23 @@ public class StockTradeService {
     }
 
     @Transactional
-    public TransactionOrder createTransactionOrder(TransactionOrder.OrderRequest transactionOrder, TransactionOrder.Type type) throws SQLDataException {
+    public TransactionOrder createTransactionOrder(TransactionOrder.OrderRequest transactionOrder, TransactionOrder.Type type) throws NotAvailableTickerException {
         Optional<Stock> stockOrNull = stockRepository.findByTicker(transactionOrder.ticker());
 
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
             TransactionOrder order = new TransactionOrder(null, transactionOrder.playerId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
+            if (type == TransactionOrder.Type.BUY) transactionOrderListComponent.buyOrderList.add(order);
+            else transactionOrderListComponent.sellOrderList.add(order);
+
             return orderRepository.save(order);
         } else {
-            throw new SQLDataException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
+            throw new NotAvailableTickerException("Stock with " + transactionOrder.ticker() + " ticker doesn't exists");
         }
     }
 
     @Transactional
-    public synchronized void createTransaction(String ticker, Double price, Long quantity, String sellPlayer, String buyPlayer) {
+    public void createTransaction(String ticker, Double price, Long quantity, String sellPlayer, String buyPlayer) {
         Stock stock = stockRepository.findByTicker(ticker).get();
 
         Transaction transaction = new Transaction(null, sellPlayer, ticker, quantity, price, Transaction.Type.SELL, LocalDate.now());
@@ -124,6 +131,67 @@ public class StockTradeService {
 
     public List<Stock> createStockByStockList(List<Stock> nasdaqStockList) {
         return stockRepository.saveAll(nasdaqStockList);
+    }
+
+    @Transactional
+    public boolean isAllowedToMakeOrder(TransactionOrder.OrderRequest order, TransactionOrder.Type orderType) {
+
+        String userId = order.playerId();
+
+        Optional<Stock> stockOptional = stockRepository.findByTicker(order.ticker());
+        if (stockOptional.isEmpty()) throw new RuntimeException("ticker : " + order.ticker() + " 의 주식이 존재하지 않습니다.");
+        Optional<Player> playerOptional = playerRepository.findById(userId);
+        if (playerOptional.isEmpty()) throw new RuntimeException("user id : " + userId + " 의 사용자가 존재하지 않습니다.");
+
+        // 매도할 주식을 충분히 가지고 있는지 확인 (admin 제회)
+        if (!userId.equals("admin")) {
+            if (orderType == TransactionOrder.Type.SELL) {
+                Optional<Portfolio> portfolioOptional = portfolioRepository.findByPlayerIdAndTicker(userId, stockOptional.get().getTicker());
+                if (portfolioOptional.isPresent()) {
+                    Portfolio portfolio = portfolioOptional.get();
+                    if (portfolio.getQuantity() < order.quantity()) {
+                        throw new RuntimeException("Not enough quantity to sell!");
+                    }
+                }
+                else {
+                    throw new RuntimeException("Not enough quantity to sell!");
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public List<Stock> getNasdaqStockListFromCSV() throws IOException, CsvValidationException {
+        List<Stock> nasdaqStockList = new ArrayList<>();
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/nasdaq_screener_1736480783742.csv")).getFile()
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        String[] header = csvReader.readNext();
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < header.length; i++) {
+            headerMap.put(header[i], i);
+        }
+
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            nasdaqStockList.add(new Stock(
+                    null,
+                    record[headerMap.get("Symbol")],
+                    record[headerMap.get("Name")],
+                    "NASDAQ",
+                    record[headerMap.get("Sector")],
+                    record[headerMap.get("Industry")],
+                    Double.parseDouble(record[headerMap.get("Last Sale")].substring(1)),
+                    LocalDateTime.now()));
+        }
+
+        return nasdaqStockList;
     }
 }
 

@@ -1,32 +1,33 @@
 package com.sykim.axelrod.hompage;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
+import com.sykim.axelrod.exceptions.NotAvailableTickerException;
+import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
+import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.resps.Tuple;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.sql.SQLDataException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,23 +36,27 @@ import java.util.stream.IntStream;
 public class HomepageController {
 
     @Autowired
-    HomepageService homepageService;
+    private HomepageService homepageService;
     @Autowired
-    StockTradeService stockTradeService;
+    private StockTradeService stockTradeService;
     @Autowired
-    UserService userService;
+    private UserService userService;
     @Autowired
-    MatchingService matchingService;
+    private MatchingService matchingService;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private TransactionOrderListComponent transactionOrderListComponent;
 
-    @Autowired
-    JedisPool jedisPool;
+    @Value("${alphavantage.key}")
+    private String ALPHA_VANTAGE_API_KEY;
 
     @GetMapping("")
     public String mainPage(
             @RequestParam(name = "userId", required = false) String userId,
             @RequestParam("page") Optional<Integer> page,
             @RequestParam("size") Optional<Integer> size,
-            Model model) {
+            Model model) throws IOException {
 
         int currentPage = page.orElse(1);
         int pageSize = size.orElse(15);
@@ -61,43 +66,35 @@ public class HomepageController {
         model.addAttribute("stocks", stockPage);
 
         int totalPages = stockPage.getTotalPages();
-        System.out.println("total pages : " + totalPages);
         if (totalPages > 0) {
             List<Integer> pageNumbers = IntStream.rangeClosed(currentPage, currentPage + 10)
                     .boxed()
                     .collect(Collectors.toList());
             model.addAttribute("pageNumbers", pageNumbers);
         }
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
 
-        List<Stock> stockList = homepageService.getAllStocks();
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
         model.addAttribute("portfolios", userPFList);
 
-        List<TransactionOrder> buyOrderList = new ArrayList<>();
-        List<TransactionOrder> sellOrderList = new ArrayList<>();
-        for (Stock stock: stockList) {
-            Gson gson = new Gson();
-            try (Jedis jedis = jedisPool.getResource()) {
-                List<Tuple> buyOrderTupleList = jedis.zrangeWithScores("orderbook:buy:" + stock.getTicker(), 0, -1);
-                for (Tuple order: buyOrderTupleList) {
-                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
-                    buyOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.BUY));
-                }
-                List<Tuple> sellOrderTupleList = jedis.zrangeWithScores("orderbook:sell:" + stock.getTicker(), 0, -1);
-                for (Tuple order: sellOrderTupleList) {
-                    Transaction.RedisOrder redisOrderElement = gson.fromJson(order.getElement(), Transaction.RedisOrder.class);
-                    sellOrderList.add(new TransactionOrder(null, redisOrderElement.userId(), stock.getTicker(), redisOrderElement.quantity(), order.getScore(), TransactionOrder.Type.SELL));
-                }
-            }
-        }
+        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+        if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
+        else model.addAttribute("accounts", accountService.getAllAccounts());
 
-        model.addAttribute("buyOrderList", buyOrderList);
-        model.addAttribute("sellOrderList", sellOrderList);
+        // TODO : NASDAQ 주식 전부 돌면서 orderbook:buy, orderbook:sell 주문 리스트 가져오는 시간 줄이기 현재 1.5초 ~ 2초
+        // Mac에선 원래 0.7초
+        // => order list를 가지고 있는 bean 객체를 따로 생성하여 매번 화면이 랜더링 될때마다 거래 주문 리스트를 전부 긁어오는 시간을 줄임
+        // 바뀐후 시간 : Mac 에서 0.1초
+        List<TransactionOrder> buyOrderList = transactionOrderListComponent.buyOrderList;
+        List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
+        model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
+        model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
@@ -154,42 +151,27 @@ public class HomepageController {
     }
 
     @GetMapping("/buy")
-    public String buyStockForm(@RequestParam(value = "userId") String userId, Model model) throws IOException, CsvValidationException {
+    public String buyStockForm(@RequestParam(value = "ticker") String ticker, @RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("ticker", ticker);
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Buy");
-
-        List<Stock.Diamond> dataList = new ArrayList<>();
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(
-                Objects.requireNonNull(classLoader.getResource("data/diamonds.csv").getFile())
-        );
-        FileReader fileReader = new FileReader(file);
-        CSVReader csvReader = new CSVReader(fileReader);
-
-        csvReader.readNext();
-        String[] record;
-        while ((record = csvReader.readNext()) != null) {
-            dataList.add(new Stock.Diamond(Double.parseDouble(record[0]), Integer.parseInt(record[1])));
-        }
-
-        model.addAttribute("chartData", dataList);
-
-
         return "orderStock";
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
-        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException, NotEnoughBalanceException {
+        //TODO: Account Balance 확인
+        accountService.checkAccountBalance(order);
+        stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
         return "redirect:/homepage?userId=" + order.playerId();
     }
 
     @GetMapping("/sell")
-    public String sellStockForm(@RequestParam(value = "userId") String userId, Model model) {
+    public String sellStockForm(@RequestParam(value = "ticker") String ticker, @RequestParam(value = "userId") String userId, Model model) {
+        model.addAttribute("ticker", ticker);
         model.addAttribute("userId", userId);
         model.addAttribute("order", new TransactionOrder());
         model.addAttribute("type", "Sell");
@@ -197,11 +179,136 @@ public class HomepageController {
     }
 
     @PostMapping("/Sell")
-    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws SQLDataException {
-        stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
+    public String sellStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException {
+        stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.SELL);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.SELL, order.price(), order.quantity());
         return "redirect:/homepage?userId=" + order.playerId();
+    }
+
+    @GetMapping("/stock")
+    public String stockDetail(@RequestParam("ticker") String ticker,@RequestParam("userId") Optional<String> userId, Model model) throws IOException, CsvValidationException {
+        List<Stock.History> dataList = new ArrayList<>();
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(
+                Objects.requireNonNull(classLoader.getResource("data/aapl-2.csv").getFile())
+        );
+        FileReader fileReader = new FileReader(file);
+        CSVReader csvReader = new CSVReader(fileReader);
+
+        csvReader.readNext();
+        String[] record;
+        while ((record = csvReader.readNext()) != null) {
+            dataList.add(new Stock.History(record[0]
+                    , Double.parseDouble(record[1])
+                    , Double.parseDouble(record[2])
+                    , Double.parseDouble(record[3])
+                    , Double.parseDouble(record[4])
+                    , Double.parseDouble(record[5])
+                    , Long.parseLong(record[6])));
+        }
+        dataList = getStockData(ticker);
+        model.addAttribute("chartData", dataList);
+        if (userId.isPresent()) {
+            System.out.println("userId : " + userId.get());
+            model.addAttribute("userId", userId.get());
+        }
+        model.addAttribute("ticker", ticker);
+
+        return "stockPage";
+    }
+
+    @GetMapping("/create/account")
+    public String createAccount(@RequestParam("userId") String userId, Model model) {
+        model.addAttribute("userId", userId);
+        List<Bank> bankList = accountService.getAllBanksList();
+        model.addAttribute("banks", bankList.subList(0, 100));
+        model.addAttribute("createAccount", new Account.CreateAccount("", ""));
+        return "createAccount";
+    }
+
+    @PostMapping("/create/account")
+    public String createAccountResult(@ModelAttribute Account.CreateAccount createAccount, Model model) {
+        Account account = accountService.createAccount(createAccount);
+        return "redirect:/homepage?userId=" + createAccount.playerId();
+    }
+
+    @GetMapping("/deposit")
+    public String depositMoney(@RequestParam("userId") String userId, @RequestParam("accountNum") String accountNum, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("accountNum", accountNum);
+        model.addAttribute("changeBalance", new Account.ChangeBalance("", "", 1, 0d));
+        model.addAttribute("type", "deposit");
+        return "changeBalance";
+    }
+
+    @PostMapping("/deposit")
+    public String depositMoneyResult(@ModelAttribute Account.ChangeBalance changeBalance, Model model) throws NotEnoughBalanceException, AccountDoseNotExistException {
+        System.out.println(changeBalance);
+        accountService.changeAccountBalance(changeBalance.accountNum(), changeBalance.amount() * changeBalance.type());
+        return "redirect:/homepage?userId=" + changeBalance.userId();
+    }
+
+    @GetMapping("/withdrawal")
+    public String withdrawMoney(@RequestParam("userId") String userId, @RequestParam("accountNum") String accountNum, Model model) {
+        model.addAttribute("userId", userId);
+        model.addAttribute("accountNum", accountNum);
+        model.addAttribute("changeBalance", new Account.ChangeBalance("", "", -1, 0d));
+        model.addAttribute("type", "withdrawal");
+        return "changeBalance";
+    }
+
+    @PostMapping("/withdrawal")
+    public String withdrawMoneyResult(@ModelAttribute Account.ChangeBalance changeBalance, Model model) throws NotEnoughBalanceException, AccountDoseNotExistException {
+        System.out.println(changeBalance);
+        accountService.changeAccountBalance(changeBalance.accountNum(), changeBalance.amount() * changeBalance.type());
+        return "redirect:/homepage?userId=" + changeBalance.userId();
+    }
+
+    private List<Stock.History> getStockData(String ticker) throws IOException {
+
+//        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + ticker +"&apikey=" + ALPHA_VANTAGE_API_KEY);
+        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+
+        StringBuilder fullResponseBuilder = new StringBuilder();
+        Reader streamReader = null;
+        streamReader = new InputStreamReader(con.getInputStream());
+
+        BufferedReader in = new BufferedReader(streamReader);
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+
+        in.close();
+
+        fullResponseBuilder.append(content);
+
+        List<Stock.History> dataList = new ArrayList<>();
+        String data = fullResponseBuilder.toString();
+
+        System.out.println(data);
+        JSONObject jsonObject = new JSONObject(data).getJSONObject("Time Series (Daily)");
+
+        JSONArray keys = jsonObject.names();
+
+        for (int i = 0; i < keys.length(); i++) {
+            String key = keys.getString(i);
+
+            dataList.add(new Stock.History(key
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("1. open"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("2. high"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("3. low"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
+                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
+                    , Long.parseLong(jsonObject.getJSONObject(key).getString("5. volume"))));
+
+        }
+
+        return dataList;
     }
 
 }

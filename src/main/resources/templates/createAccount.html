@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form action="#" th:action="'/homepage/create/account'" th:object="${createAccount}" method="post">
+    <p><input hidden type="text" name="playerId" th:value="${userId}"/></p>
+    <select th:field="*{bankName}">
+        <option value="0">select option</option>
+        <option th:each="bank : ${banks}" th:value="${bank.name}" th:text="${bank.name}"></option>
+    </select>
+    <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
+    </form>
+</body>
+</html>

@@ -42,11 +42,24 @@
             color: white;
             border-radius: 2px;
         }
+
+        footer {
+          text-align: center;
+          padding: 3px;
+          background-color: darkslategrey;
+          color: white;
+        }
+        main {
+        display: flex;
+        flex-direction: column;
+        }
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 <body>
+<section>
 <h1>Axelrod Stock Simulator</h1>
+    <main>
 <div>
     <div class="box left">
     <table>
@@ -61,7 +74,7 @@
             <td colspan="2"> No Stocks Available </td>
         </tr>
         <tr th:each="stock, iStat : ${stocks}">
-            <td><span th:text="${stock.ticker}"> </span></td>
+            <td><a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}"><span th:text="${stock.ticker}"> </span></a></td>
             <td><span th:text="${stock.price}"> </span></td>
         </tr>
         </tbody>
@@ -113,9 +126,21 @@
     </div>
     <div th:if="${userId != null}" class="box left">
         <div class="left" style="border:0px">
-        <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
-        <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
-        <a href="/homepage/logout">Log Out</a>
+            <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
+            <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
+            <table>
+                <thead>
+                    <tr><th style="text-align: left">Account Number</th><th style="text-align: left">Balance</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="account: ${accounts}">
+                        <td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td>
+                        <td><a th:href="'/homepage/deposit?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Add balance</a></td>
+                        <td><a th:href="'/homepage/withdrawal?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Withdraw balance</a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><a th:href="'/homepage/create/account?userId=' + ${userId}">Create Account</a><a href="/homepage/logout">Log Out</a></p>
         </div>
         <div class="right" style="height:100%; border:0px;">
             <table style="margin:auto; width:100%">
@@ -128,8 +153,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:if="${buyOrderList.empty}">
-                    <td colspan="4"> No Buy Order </td>
+                <tr th:if="${portfolios.empty}">
+                    <td colspan="4"> No Portfolios </td>
                 </tr>
                 <tr th:each="pf : ${portfolios}">
                     <td><span th:text="${pf.ticker}"> </span></td>
@@ -216,5 +241,13 @@
       }
     });
 </script>
+    </main>
+    <footer>
+        <p>Developer: Sangyoon Kim<br>
+            Email : <a href="projectaxelrod@gmail.com">projectaxelrod@gmail.com</a><br>
+            Github : <a href="sangyun004@github.com">sangyun004@github.com</a></p>
+    </footer>
+</section>
+
 </body>
 </html>

@@ -30,6 +30,8 @@ public class MatchingExecutorPool {
 
     @Autowired
     JedisPool jedisPool;
+    @Autowired
+    TransactionOrderListComponent transactionOrderListComponent;
 
     private boolean systemRunning = true;
     @PreDestroy
@@ -99,6 +101,7 @@ public class MatchingExecutorPool {
             }
 
             stockTradeService.updateStockPrice(ticker, transactionPrice);
+            transactionOrderListComponent.reloadOrderData();
         }
         return null;
     }

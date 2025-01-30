@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${ticker}"></title>
+    <script th:src="@{/d3.min.js}"></script>
+    <script th:src="@{/chart.js}" type='module'></script>
+    <style>
+        main {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <h1 th:text="${ticker}"></h1>
+    <div id="container"></div>
+    <div>
+        <tr th:if="${userId != ''}">
+            <p><a th:href="'/homepage/buy?ticker=' + ${ticker} + '&userId=' + ${userId}">Buy Stock</a> <a th:href="'/homepage/sell?ticker=' + ${ticker} + '&userId=' + ${userId}">Sell Stock</a></p>
+        </tr>
+    </div>
+
+    <script th:inline="javascript" type='module'>
+        import {
+            candlestickChart
+        } from '/chart.js';
+
+        let aapl = [[${chartData}]];
+
+        console.log("java aapl:")
+        console.log(aapl)
+        console.log(Date.now())
+        console.log(aapl.length)
+
+         const chart = candlestickChart(aapl, {
+          yLabel: "↑ Price ($)",
+          width: 1000,
+          height: 500
+        });
+
+        container.append(chart);
+    </script>
+</body>
+</html>

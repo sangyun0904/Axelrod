@@ -1,26 +1,24 @@
 package com.sykim.axelrod.controller;
 
 
-import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.matching.MatchingService;
+import com.sykim.axelrod.model.Bank;
 import com.sykim.axelrod.model.TransactionOrder;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLDataException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -30,11 +28,13 @@ public class StockController {
     private StockTradeService stockTradeService;
     @Autowired
     private MatchingService matchingService;
+    @Autowired
+    private AccountService accountService;
 
     @PostMapping("/issue")
     public Transaction issueStocks(
             @RequestBody TransactionOrder.OrderRequest issuance
-    ) {
+    ) throws NotAvailableTickerException {
         return stockTradeService.issueStock(issuance);
     }
 
@@ -51,19 +51,22 @@ public class StockController {
     }
 
     @PostMapping("/order/buy")
-    public void crateBuyStockOrder(
+    public ResponseEntity crateBuyStockOrder(
             @RequestBody TransactionOrder.OrderRequest transactionOrder
-    ) throws SQLDataException {
+    ) throws NotAvailableTickerException {
+        //TODO: Account Balance 확인
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
+        return ResponseEntity.ok("success!");
     }
 
     @PostMapping("/order/sell")
-    public void crateSellStockOrder(
+    public ResponseEntity crateSellStockOrder(
             @RequestBody TransactionOrder.OrderRequest transactionOrder
-    ) throws SQLDataException {
+    ) throws NotAvailableTickerException {
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.SELL);
         matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.SELL, transactionOrder.price(), transactionOrder.quantity());
+        return ResponseEntity.ok("success!");
     }
 
     @GetMapping("/stocks")
@@ -73,38 +76,16 @@ public class StockController {
 
     @GetMapping("/generateStock")
     public String generateStockData() throws IOException, CsvValidationException {
-
-        List<Stock> nasdaqStockList = new ArrayList<>();
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(
-                Objects.requireNonNull(classLoader.getResource("data/nasdaq_screener_1736480783742.csv").getFile())
-        );
-        FileReader fileReader = new FileReader(file);
-        CSVReader csvReader = new CSVReader(fileReader);
-
-        String[] header = csvReader.readNext();
-        Map<String, Integer> headerMap = new HashMap<>();
-        for (int i = 0; i < header.length; i++) {
-            headerMap.put(header[i], i);
-        }
-
-        String[] record;
-        while ((record = csvReader.readNext()) != null) {
-            nasdaqStockList.add(new Stock(
-                    null,
-                    record[headerMap.get("Symbol")],
-                    record[headerMap.get("Name")],
-                    "NASDAQ",
-                    record[headerMap.get("Sector")],
-                    record[headerMap.get("Industry")],
-                    Double.parseDouble(record[headerMap.get("Last Sale")].substring(1)),
-                    LocalDateTime.now()));
-        }
-
+        List<Stock> nasdaqStockList = stockTradeService.getNasdaqStockListFromCSV();
         stockTradeService.createStockByStockList(nasdaqStockList);
-
         return "Stock generated";
+    }
+
+    @GetMapping("/generateBank")
+    public String generateBankData() throws IOException, CsvValidationException {
+        List<Bank> bankList = accountService.getBankListFromCSV();
+        accountService.createBankByList(bankList);
+        return "Bank generated";
     }
 
 }

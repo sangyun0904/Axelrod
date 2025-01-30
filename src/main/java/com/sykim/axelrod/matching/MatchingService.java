@@ -37,29 +37,12 @@ public class MatchingService {
         Optional<Player> playerOptional = playerRepository.findById(userId);
         if (playerOptional.isEmpty()) throw new RuntimeException("user id : " + userId + " 의 사용자가 존재하지 않습니다.");
 
-        // 매도할 주식을 충분히 가지고 있는지 확인 (admin 제회)
-        if (!userId.equals("admin")) {
-            if (orderType == TransactionOrder.Type.SELL) {
-                Optional<Portfolio> portfolioOptional = portfolioRepository.findByPlayerIdAndTicker(userId, stockOptional.get().getTicker());
-                if (portfolioOptional.isPresent()) {
-                    Portfolio portfolio = portfolioOptional.get();
-                    if (portfolio.getQuantity() < quantity) {
-                        throw new RuntimeException("Not enough quantity to sell!");
-                    }
-                }
-                else {
-                    throw new RuntimeException("Not enough quantity to sell!");
-                }
-            }
-        }
-
         String type;
         if (orderType== TransactionOrder.Type.BUY) type = "buy";
         else if (orderType== TransactionOrder.Type.SELL) type = "sell";
         else throw new RuntimeException("order type 이 올바르지 않습니다.");
 
         try (Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT)) {
-            System.out.println("Connected to Redis!");
 
             // Redis 키: orderbook:type:<ticker>
             String orderKey = "orderbook:" + type + ":" + ticker;
