@@ -1,7 +1,11 @@
 package com.sykim.axelrod.matching;
 
 import com.google.gson.Gson;
+import com.sykim.axelrod.AccountService;
 import com.sykim.axelrod.StockTradeService;
+import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
+import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
+import com.sykim.axelrod.model.Account;
 import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
 import jakarta.annotation.PreDestroy;
@@ -24,6 +28,8 @@ public class MatchingExecutorPool {
     private StockTradeService stockTradeService;
     @Autowired
     private MatchingService matchingService;
+    @Autowired
+    private AccountService accountService;
 
     private final int LOOP_NUM=300;
     private int stockMatchingLoopIndex = 0;
@@ -68,7 +74,7 @@ public class MatchingExecutorPool {
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
     }
 
-    private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) {
+    private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) throws NotEnoughBalanceException, AccountDoseNotExistException {
         // TODO : - 주식 판매 금액이 구매 수량 금액보다 높으면 null 리턴
         //        - 판매 수량이 같거나 더 많으면 Transaction 생성 및 Player Portfolio 수정
         //        - 남은 주식 redis 에 다시 ZADD
@@ -99,6 +105,11 @@ public class MatchingExecutorPool {
                     jedis.zadd("orderbook:buy:" + ticker , buyOrderTuple.getScore(), "{\"orderId\":\"" + buyOrder.orderId() + "\",\"quantity\":" + (buyOrder.quantity() - quantity) + ",\"userId\":\"" + buyOrder.userId() + "\"}");
                 }
             }
+
+            Account buyAccount = accountService.getAccountByUsername(buyOrder.userId()).get(0);
+            Account sellAccount = accountService.getAccountByUsername(sellOrder.userId()).get(0);
+            accountService.changeAccountBalance(buyAccount.getAccountNum(), 0 - transactionPrice * quantity);
+            accountService.changeAccountBalance(sellAccount.getAccountNum(), transactionPrice * quantity);
 
             stockTradeService.updateStockPrice(ticker, transactionPrice);
             transactionOrderListComponent.reloadOrderData();
