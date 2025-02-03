@@ -79,9 +79,18 @@ public class HomepageController {
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
+        List<Portfolio.PortfolioReport> userPFReportList = userPFList.stream().map(
+                portfolio -> {
+                    try {
+                        return new Portfolio.PortfolioReport(portfolio.getPlayerId(), portfolio.getTicker(), portfolio.getQuantity(), portfolio.getAveragePrice(), stockTradeService.getCurrentPriceByTicker(portfolio.getTicker()));
+                    } catch (NotAvailableTickerException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        ).toList();
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
-        model.addAttribute("portfolios", userPFList);
+        model.addAttribute("portfolios", userPFReportList);
 
         System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
