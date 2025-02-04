@@ -54,8 +54,7 @@ public class StockController {
             @RequestBody TransactionOrder.OrderRequest transactionOrder
     ) throws NotAvailableTickerException, NotEnoughBalanceException, AccountDoseNotExistException {
         //TODO: Account Balance 확인
-        Account account = accountService.getAccountByUsername(transactionOrder.playerId()).get(0);
-        accountService.changeAccountBalance(account.getAccountNum(), transactionOrder.price() * transactionOrder.quantity());
+        accountService.checkAccountBalance(transactionOrder);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(transactionOrder, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), transactionOrder.playerId(), transactionOrder.ticker(), TransactionOrder.Type.BUY, transactionOrder.price(), transactionOrder.quantity());
         return ResponseEntity.ok("success!");
