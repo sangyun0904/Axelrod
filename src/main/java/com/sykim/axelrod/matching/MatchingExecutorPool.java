@@ -112,7 +112,9 @@ public class MatchingExecutorPool {
             accountService.changeAccountBalance(sellAccount.getAccountNum(), transactionPrice * quantity);
 
             stockTradeService.updateStockPrice(ticker, transactionPrice);
-            transactionOrderListComponent.reloadOrderData();
+            System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+//            transactionOrderListComponent.reloadOrderData();
+            System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         }
         return null;
     }
