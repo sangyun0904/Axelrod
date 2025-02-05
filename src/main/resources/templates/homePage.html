@@ -49,9 +49,18 @@
           background-color: darkslategrey;
           color: white;
         }
+
         main {
-        display: flex;
-        flex-direction: column;
+          display: flex;
+          flex-direction: column;
+        }
+
+        span.red {
+             color: red;
+        }
+
+        span.blue {
+             color: blue;
         }
     </style>
 </head>
@@ -149,7 +158,7 @@
                 <tr>
                     <th> StockId </th>
                     <th> Quantity </th>
-                    <th> Average Price </th>
+                    <th> Current Price </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -159,7 +168,12 @@
                 <tr th:each="pf : ${portfolios}">
                     <td><span th:text="${pf.ticker}"> </span></td>
                     <td><span th:text="${pf.quantity}"> </span></td>
-                    <td><span th:text="${pf.stockCurrentPrice}"> </span></td>
+                    <td>
+                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice} + ' 0.0%'"> </span>
+                        <span> )</span>
+                    </td>
                 </tr>
                 </tbody>
             </table>

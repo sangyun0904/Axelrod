@@ -80,16 +80,6 @@ public class HomepageController {
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
-        List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
-        List<Portfolio.PortfolioReport> userPFReportList = userPFList.stream().map(
-                portfolio -> {
-                    try {
-                        return new Portfolio.PortfolioReport(portfolio.getPlayerId(), portfolio.getTicker(), portfolio.getQuantity(), portfolio.getAveragePrice(), stockTradeService.getCurrentPriceByTicker(portfolio.getTicker()));
-                    } catch (NotAvailableTickerException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        ).toList();
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
 

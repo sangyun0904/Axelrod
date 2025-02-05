@@ -61,7 +61,16 @@ public class HomepageService {
     public Page<Portfolio.PortfolioReport> getPortfolioReportPaginated(Pageable pageable, String userId) {
         List<Portfolio> portfolios = portfolioRepository.findByPlayerId(userId);
         List<Portfolio.PortfolioReport> reports = portfolios.stream().map(portfolio -> {
-            return new Portfolio.PortfolioReport(portfolio.getPlayerId(), portfolio.getTicker(), portfolio.getQuantity(), portfolio.getAveragePrice(), stockRepository.findByTicker(portfolio.getTicker()).get().getPrice());
+            Stock stock = stockRepository.findByTicker(portfolio.getTicker()).get();
+
+            return new Portfolio.PortfolioReport(
+                    portfolio.getPlayerId(),
+                    portfolio.getTicker(),
+                    portfolio.getQuantity(),
+                    String.format("%.4f",portfolio.getAveragePrice()),
+                    String.format("%.4f", stock.getPrice()),
+                    String.format("%.2f", 100 - Math.min(portfolio.getAveragePrice(), stock.getPrice()) / Math.max(portfolio.getAveragePrice(), stock.getPrice()) * 100) + "%"
+            );
         }).toList();
         int pageSize = pageable.getPageSize();
         int currentPage = pageable.getPageNumber();
