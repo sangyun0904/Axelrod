@@ -80,11 +80,11 @@
         </tbody>
     </table>
     <div th:if="${stocks.totalPages > 0}" class="pagination"
-         th:each="pageNumber : ${pageNumbers}">
-        <a th:if="${userId == null}" th:href="@{/homepage(size=${stocks.size}, page=${pageNumber})}"
+         th:each="pageNumber : ${stockPageNumbers}">
+        <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
            th:text=${pageNumber}
            th:class="${pageNumber==stocks.number + 1} ? active"></a>
-        <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, size=${stocks.size}, page=${pageNumber})}"
+        <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
            th:text=${pageNumber}
            th:class="${pageNumber==stocks.number + 1} ? active"></a>
     </div>
@@ -163,6 +163,15 @@
                 </tr>
                 </tbody>
             </table>
+            <div th:if="${portfolios.totalPages > 0}" class="pagination"
+                 th:each="pageNumber : ${portfolioPageNumbers}">
+                <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
+                   th:text=${pageNumber}
+                   th:class="${pageNumber==portfolios.number + 1} ? active"></a>
+                <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
+                   th:text=${pageNumber}
+                   th:class="${pageNumber==portfolios.number + 1} ? active"></a>
+            </div>
         </div>
     </div>
     <div class="box right">

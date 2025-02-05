@@ -1,6 +1,5 @@
 package com.sykim.axelrod.hompage;
 
-import com.google.gson.Gson;
 import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.repository.PlayerRepository;
 import com.sykim.axelrod.repository.PortfolioRepository;
@@ -11,8 +10,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import redis.clients.jedis.resps.Tuple;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +38,7 @@ public class HomepageService {
         return portfolioRepository.findByPlayerId(userId);
     }
 
-    public Page<Stock> findStockPaginated(Pageable pageable) {
+    public Page<Stock> getStockPaginated(Pageable pageable) {
         List<Stock> stocks = stockRepository.findAll();
 
         int pageSize = pageable.getPageSize();
@@ -60,4 +57,27 @@ public class HomepageService {
 
         return stockPage;
     }
+
+    public Page<Portfolio.PortfolioReport> getPortfolioReportPaginated(Pageable pageable, String userId) {
+        List<Portfolio> portfolios = portfolioRepository.findByPlayerId(userId);
+        List<Portfolio.PortfolioReport> reports = portfolios.stream().map(portfolio -> {
+            return new Portfolio.PortfolioReport(portfolio.getPlayerId(), portfolio.getTicker(), portfolio.getQuantity(), portfolio.getAveragePrice(), stockRepository.findByTicker(portfolio.getTicker()).get().getPrice());
+        }).toList();
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+        List<Portfolio.PortfolioReport> reportList;
+
+        if (reports.size() < startItem) {
+            reportList = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, reports.size());
+            reportList = reports.subList(startItem, toIndex);
+        }
+
+        Page<Portfolio.PortfolioReport> portfolioPage = new PageImpl<>(reportList, PageRequest.of(currentPage, pageSize), portfolios.size());
+
+        return portfolioPage;
+    }
+
 }
