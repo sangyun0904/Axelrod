@@ -313,12 +313,12 @@ public class HomepageController {
         List<Integer> pageNumbers;
 
         if (currentPage < 5) {
-            pageNumbers = IntStream.rangeClosed(1, 11)
+            pageNumbers = IntStream.rangeClosed(1, Math.min(10, lastPage))
                     .boxed()
                     .collect(Collectors.toList());
         }
         else {
-            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 6, lastPage))
+            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 5, lastPage))
                     .boxed()
                     .collect(Collectors.toList());
         }
