@@ -193,5 +193,11 @@ public class StockTradeService {
 
         return nasdaqStockList;
     }
+
+    public Double getCurrentPriceByTicker(String ticker) throws NotAvailableTickerException {
+        Optional<Stock> stock = stockRepository.findByTicker(ticker);
+        if (stock.isPresent()) return stock.get().getPrice();
+        else throw new NotAvailableTickerException("Stock with " + ticker + " ticker doesn't exists");
+    }
 }
 

@@ -34,7 +34,8 @@ public class TransactionSimulation extends Simulation {
         Iterator<Map<String, Object>> iterator;
         iterator = Stream.generate(() -> {
             Map<String, Object> stringObjectMap = new HashMap<>();
-            stringObjectMap.put("playerId", "gatling");
+//            stringObjectMap.put("playerId", "gatling");
+            stringObjectMap.put("playerId", "admin");
             stringObjectMap.put("ticker", faker.stock().nsdqSymbol());
             stringObjectMap.put("quantity", rand.nextLong(1000));
             stringObjectMap.put("price", rand.nextDouble(10000));
@@ -47,7 +48,8 @@ public class TransactionSimulation extends Simulation {
     private static ScenarioBuilder buildPostScenario() {
         return CoreDsl.scenario("Load Test Creating Transaction")
                 .feed(feedData())
-                .exec(http("transaction").post("/order/buy")
+//                .exec(http("transaction").post("/order/buy")
+                .exec(http("transaction").post("/order/sell")
                         .header("Content-Type", "application/json")
                         .body(StringBody("{\"playerId\":\"#{playerId}\",\"ticker\":\"#{ticker}\",\"quantity\":\"#{quantity}\",\"price\":\"#{price}\" }"))
                         .check(status().is(200)));

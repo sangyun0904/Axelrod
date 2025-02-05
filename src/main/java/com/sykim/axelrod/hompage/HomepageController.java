@@ -1,6 +1,5 @@
 package com.sykim.axelrod.hompage;
 
-import com.google.gson.JsonObject;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -50,40 +48,41 @@ public class HomepageController {
 
     @Value("${alphavantage.key}")
     private String ALPHA_VANTAGE_API_KEY;
+    private final int PAGE_SIZE=15;
 
     @GetMapping("")
     public String mainPage(
             @RequestParam(name = "userId", required = false) String userId,
-            @RequestParam("page") Optional<Integer> page,
-            @RequestParam("size") Optional<Integer> size,
+            @RequestParam("stockPage") Optional<Integer> stockPageNum,
+            @RequestParam("pfPage") Optional<Integer> pfPageNum,
             Model model) throws IOException {
 
-        int currentPage = page.orElse(1);
-        int pageSize = size.orElse(15);
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
-
-        Page<Stock> stockPage = homepageService.findStockPaginated(PageRequest.of(currentPage - 1, pageSize));
+        int stockListCurrentPage = stockPageNum.orElse(1);
+        Page<Stock> stockPage = homepageService.getStockPaginated(PageRequest.of(stockListCurrentPage - 1, PAGE_SIZE));
         model.addAttribute("stocks", stockPage);
-
-        int totalPages = stockPage.getTotalPages();
-        if (totalPages > 0) {
-            List<Integer> pageNumbers = IntStream.rangeClosed(currentPage, currentPage + 10)
-                    .boxed()
-                    .collect(Collectors.toList());
-            model.addAttribute("pageNumbers", pageNumbers);
+        int lastPage = stockPage.getTotalPages();
+        if (lastPage > 0) {
+            List<Integer> pageNumbers = getPageNumbers(stockListCurrentPage, lastPage);
+            model.addAttribute("stockPageNumbers", pageNumbers);
         }
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+        model.addAttribute("stockCurrentPage", stockListCurrentPage);
+
+        int portfolioCurrentPage = pfPageNum.orElse(1);
+        Page<Portfolio.PortfolioReport> portfolioPage = homepageService.getPortfolioReportPaginated(PageRequest.of(portfolioCurrentPage - 1, PAGE_SIZE), userId);
+        model.addAttribute("portfolios", portfolioPage);
+        lastPage = portfolioPage.getTotalPages();
+        if (lastPage > 0) {
+            List<Integer> pageNumbers = getPageNumbers(portfolioCurrentPage, lastPage);
+            model.addAttribute("portfolioPageNumbers", pageNumbers);
+        }
+        model.addAttribute("pfCurrentPage", portfolioCurrentPage);
 
         List<Player> playerList = homepageService.getAllPlayer();
         model.addAttribute("players", playerList);
 
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
-        List<Portfolio> userPFList = stockTradeService.getPlayerPortfolio(userId);
         model.addAttribute("userId", userId);
         model.addAttribute("user", new Player());
-        model.addAttribute("portfolios", userPFList);
 
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         if (userId != null) model.addAttribute("accounts", accountService.getAccountByUsername(userId));
         else model.addAttribute("accounts", accountService.getAllAccounts());
 
@@ -96,7 +95,6 @@ public class HomepageController {
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         return "homePage";
     }
 
@@ -309,6 +307,23 @@ public class HomepageController {
         }
 
         return dataList;
+    }
+
+    private List<Integer> getPageNumbers(int currentPage, int lastPage) {
+        List<Integer> pageNumbers;
+
+        if (currentPage < 5) {
+            pageNumbers = IntStream.rangeClosed(1, Math.min(10, lastPage))
+                    .boxed()
+                    .collect(Collectors.toList());
+        }
+        else {
+            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 5, lastPage))
+                    .boxed()
+                    .collect(Collectors.toList());
+        }
+
+        return pageNumbers;
     }
 
 }

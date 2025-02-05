@@ -19,4 +19,6 @@ public class Portfolio {
     private String ticker;
     private Long quantity;
     private Double averagePrice;
+
+    public record PortfolioReport(String playerId, String ticker, Long quantity, String myAvgPrice, String stockCurrentPrice, String differencePercent) {}
 }
