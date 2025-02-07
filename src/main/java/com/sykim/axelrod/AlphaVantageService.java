@@ -19,6 +19,8 @@ public class AlphaVantageService {
 
     public List<Stock.History> getStockData(String ticker) throws IOException {
 
+        // TODO : URL deprecated HttpUrlConnection -> HttpUriRequest
+
 //        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + ticker +"&apikey=" + ALPHA_VANTAGE_API_KEY);
         URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();

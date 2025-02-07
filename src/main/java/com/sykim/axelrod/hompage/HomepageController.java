@@ -2,10 +2,7 @@ package com.sykim.axelrod.hompage;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import com.sykim.axelrod.AccountService;
-import com.sykim.axelrod.AlphaVantageService;
-import com.sykim.axelrod.StockTradeService;
-import com.sykim.axelrod.UserService;
+import com.sykim.axelrod.*;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
@@ -48,6 +45,8 @@ public class HomepageController {
     private TransactionOrderListComponent transactionOrderListComponent;
     @Autowired
     private AlphaVantageService alphaVantageService;
+    @Autowired
+    private NewsletterService newsletterService;
 
     @Value("${alphavantage.key}")
     private String ALPHA_VANTAGE_API_KEY;
@@ -97,6 +96,8 @@ public class HomepageController {
         List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
+
+        newsletterService.getNewYorkTimesLetters();
 
         return "homePage";
     }
