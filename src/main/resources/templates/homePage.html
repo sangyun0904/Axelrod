@@ -88,6 +88,7 @@
         </tr>
         </tbody>
     </table>
+    <br>
     <div th:if="${stocks.totalPages > 0}" class="pagination"
          th:each="pageNumber : ${stockPageNumbers}">
         <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
@@ -97,7 +98,7 @@
            th:text=${pageNumber}
            th:class="${pageNumber==stocks.number + 1} ? active"></a>
     </div>
-        <br>
+    <br>
     <a href="/homepage/create">Create Stock</a>
         <div hidden>
             <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
@@ -169,14 +170,16 @@
                     <td><span th:text="${pf.ticker}"> </span></td>
                     <td><span th:text="${pf.quantity}"> </span></td>
                     <td>
-                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice} + ' 0.0%'"> </span>
+                        <span th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"></span>
+                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="' 0.0%'"> </span>
                         <span> )</span>
                     </td>
                 </tr>
                 </tbody>
             </table>
+            <br>
             <div th:if="${portfolios.totalPages > 0}" class="pagination"
                  th:each="pageNumber : ${portfolioPageNumbers}">
                 <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"

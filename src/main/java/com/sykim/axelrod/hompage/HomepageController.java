@@ -3,6 +3,7 @@ package com.sykim.axelrod.hompage;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
+import com.sykim.axelrod.AlphaVantageService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.UserService;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
@@ -45,6 +46,8 @@ public class HomepageController {
     private AccountService accountService;
     @Autowired
     private TransactionOrderListComponent transactionOrderListComponent;
+    @Autowired
+    private AlphaVantageService alphaVantageService;
 
     @Value("${alphavantage.key}")
     private String ALPHA_VANTAGE_API_KEY;
@@ -205,7 +208,7 @@ public class HomepageController {
                     , Double.parseDouble(record[5])
                     , Long.parseLong(record[6])));
         }
-        dataList = getStockData(ticker);
+        dataList = alphaVantageService.getStockData(ticker);
         model.addAttribute("chartData", dataList);
         if (userId.isPresent()) {
             System.out.println("userId : " + userId.get());
@@ -263,62 +266,16 @@ public class HomepageController {
         return "redirect:/homepage?userId=" + changeBalance.userId();
     }
 
-    private List<Stock.History> getStockData(String ticker) throws IOException {
-
-//        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + ticker +"&apikey=" + ALPHA_VANTAGE_API_KEY);
-        URL url = new URL("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-
-        StringBuilder fullResponseBuilder = new StringBuilder();
-        Reader streamReader = null;
-        streamReader = new InputStreamReader(con.getInputStream());
-
-        BufferedReader in = new BufferedReader(streamReader);
-        String inputLine;
-        StringBuilder content = new StringBuilder();
-        while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-        }
-
-        in.close();
-
-        fullResponseBuilder.append(content);
-
-        List<Stock.History> dataList = new ArrayList<>();
-        String data = fullResponseBuilder.toString();
-
-        System.out.println(data);
-        JSONObject jsonObject = new JSONObject(data).getJSONObject("Time Series (Daily)");
-
-        JSONArray keys = jsonObject.names();
-
-        for (int i = 0; i < keys.length(); i++) {
-            String key = keys.getString(i);
-
-            dataList.add(new Stock.History(key
-                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("1. open"))
-                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("2. high"))
-                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("3. low"))
-                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
-                    , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
-                    , Long.parseLong(jsonObject.getJSONObject(key).getString("5. volume"))));
-
-        }
-
-        return dataList;
-    }
-
     private List<Integer> getPageNumbers(int currentPage, int lastPage) {
         List<Integer> pageNumbers;
 
         if (currentPage < 5) {
-            pageNumbers = IntStream.rangeClosed(1, 11)
+            pageNumbers = IntStream.rangeClosed(1, Math.min(10, lastPage))
                     .boxed()
                     .collect(Collectors.toList());
         }
         else {
-            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 6, lastPage))
+            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 5, lastPage))
                     .boxed()
                     .collect(Collectors.toList());
         }
