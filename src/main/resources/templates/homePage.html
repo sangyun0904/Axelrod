@@ -164,7 +164,7 @@
                 </thead>
                 <tbody>
                 <tr th:if="${portfolios.empty}">
-                    <td colspan="4"> No Portfolios </td>
+                    <td colspan="4" style="text-align:center;"> No Portfolios </td>
                 </tr>
                 <tr th:each="pf : ${portfolios}">
                     <td><span th:text="${pf.ticker}"> </span></td>
