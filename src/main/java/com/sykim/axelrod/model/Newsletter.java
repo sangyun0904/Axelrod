@@ -19,5 +19,6 @@ public class Newsletter {
     private Long id;
     private String title;
     private String content;
+    private String url;
     private LocalDate postedAt;
 }
