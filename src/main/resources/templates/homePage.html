@@ -65,7 +65,7 @@
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-<body>
+<body  onload="fetchStockSearch(1);">
 <section>
 <h1>Axelrod Stock Simulator</h1>
     <main>
@@ -90,14 +90,7 @@
                 </tbody>
             </table>
             <br>
-            <div th:if="${stocks.totalPages > 0}" class="pagination"
-                 th:each="pageNumber : ${stockPageNumbers}">
-                <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==stocks.number + 1} ? active"></a>
-                <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==stocks.number + 1} ? active"></a>
+            <div class="pagination" id="stockPagination">
             </div>
             <br>
             <a href="/homepage/create">Create Stock</a>
@@ -108,7 +101,7 @@
         <div class="right" style="height:100%; border:0px;">
             <br>
             <br>
-            <p>search : <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch()"/></p>
+            <p>search : <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
         </div>
     </div>
     <div class="box right">
@@ -260,24 +253,42 @@
 <script th:inline="javascript">
     let userId = [[${userId}]];
 
-    function fetchStockSearch() {
+    function fetchStockSearch(pageNum) {
         let inputVal = document.getElementById("stockKeyword").value;
 
-        console.log(userId);
-
-        fetch('/searchStock?keyword=' + encodeURIComponent(inputVal))
+        fetch('/searchStock?keyword=' + encodeURIComponent(inputVal) + '&pageNum=' + pageNum)
             .then(response => response.json())
             .then(data => {
                 let stockTable = document.getElementById("stockTableBody");
                 stockTable.innerHTML = "";
+                let stockPage = data.stockPage;
+                let pageNumbers = data.pageNumbers;
+                let currentPage = data.currentPage;
 
-                data.forEach((stock, index) => {
+                stockPage.forEach((stock, index) => {
                     let row = document.createElement("tr");
                     row.innerHTML = `
                     <td><a href="/homepage/stock?ticker=${stock.ticker}&userId=${userId}"><span>${stock.ticker}</span></a></td>
                     <td><span>${stock.price}</span></td>
                     `;
                     stockTable.appendChild(row);
+                });
+
+                let pagination = document.getElementById("stockPagination");
+                pagination.innerHTML = "";
+
+                pageNumbers.forEach((pageNum, index) => {
+                    let row = document.createElement("a");
+                    row.innerText = pageNum;
+                    row.href = "#";
+                    row.addEventListener("click", function(event) {
+                        fetchStockSearch(pageNum);
+                    });
+                    console.log(pageNum, currentPage+1);
+                    if (pageNum == currentPage) {
+                        row.className = "active";
+                    }
+                    pagination.appendChild(row);
                 });
             })
             .catch(error => console.error("Error:", error));
