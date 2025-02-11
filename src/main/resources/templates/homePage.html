@@ -65,7 +65,7 @@
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-<body>
+<body  onload="fetchStockSearch(1);">
 <section>
 <h1>Axelrod Stock Simulator</h1>
     <main>
@@ -79,7 +79,7 @@
                     <th> Price </th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody id="stockTableBody">
                 <tr th:if="${stocks.empty}">
                     <td colspan="2"> No Stocks Available </td>
                 </tr>
@@ -90,14 +90,7 @@
                 </tbody>
             </table>
             <br>
-            <div th:if="${stocks.totalPages > 0}" class="pagination"
-                 th:each="pageNumber : ${stockPageNumbers}">
-                <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==stocks.number + 1} ? active"></a>
-                <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==stocks.number + 1} ? active"></a>
+            <div class="pagination" id="stockPagination">
             </div>
             <br>
             <a href="/homepage/create">Create Stock</a>
@@ -108,7 +101,7 @@
         <div class="right" style="height:100%; border:0px;">
             <br>
             <br>
-            <p>search : <input type="text" name="stockSearch" /></p>
+            <p>search : <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
         </div>
     </div>
     <div class="box right">
@@ -267,31 +260,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    const xValues = [50,60,70,80,90,100,110,120,130,140,150];
-    const yValues = [7,8,8,9,9,9,10,11,14,14,15];
-
-    new Chart("myChart", {
-      type: "line",
-      data: {
-        labels: xValues,
-        datasets: [{
-          fill: false,
-          lineTension: 0,
-          backgroundColor:"rgba(255,0,0,1.0)",
-          borderColor: "rgba(255,0,0,0.1)",
-          data: yValues
-        }]
-      },
-      options: {
-        legend: {display: false},
-        scales: {
-          xAxes: [{ticks: {min: 6, max:16}}],
-        }
-      }
-    });
-</script>
     </main>
     <footer>
         <p>Developer: Sangyoon Kim<br>
@@ -299,6 +267,51 @@
             Github : <a href="sangyun004@github.com">sangyun004@github.com</a></p>
     </footer>
 </section>
+
+<script th:inline="javascript">
+    let userId = [[${userId}]];
+
+    function fetchStockSearch(pageNum) {
+        let inputVal = document.getElementById("stockKeyword").value;
+
+        fetch('/searchStock?keyword=' + encodeURIComponent(inputVal) + '&pageNum=' + pageNum)
+            .then(response => response.json())
+            .then(data => {
+                let stockTable = document.getElementById("stockTableBody");
+                stockTable.innerHTML = "";
+                let stockPage = data.stockPage;
+                let pageNumbers = data.pageNumbers;
+                let currentPage = data.currentPage;
+
+                stockPage.forEach((stock, index) => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td><a href="/homepage/stock?ticker=${stock.ticker}&userId=${userId}"><span>${stock.ticker}</span></a></td>
+                    <td><span>${stock.price}</span></td>
+                    `;
+                    stockTable.appendChild(row);
+                });
+
+                let pagination = document.getElementById("stockPagination");
+                pagination.innerHTML = "";
+
+                pageNumbers.forEach((pageNum, index) => {
+                    let row = document.createElement("a");
+                    row.innerText = pageNum;
+                    row.href = "#";
+                    row.addEventListener("click", function(event) {
+                        fetchStockSearch(pageNum);
+                    });
+                    console.log(pageNum, currentPage+1);
+                    if (pageNum == currentPage) {
+                        row.className = "active";
+                    }
+                    pagination.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Error:", error));
+    }
+</script>
 
 </body>
 </html>

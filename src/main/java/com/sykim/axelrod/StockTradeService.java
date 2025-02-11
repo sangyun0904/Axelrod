@@ -8,11 +8,14 @@ import com.sykim.axelrod.exceptions.NotAvailableTickerException;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import com.sykim.axelrod.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -198,6 +201,28 @@ public class StockTradeService {
         Optional<Stock> stock = stockRepository.findByTicker(ticker);
         if (stock.isPresent()) return stock.get().getPrice();
         else throw new NotAvailableTickerException("Stock with " + ticker + " ticker doesn't exists");
+    }
+
+    public Page<Stock> searchStockByKeyword(String keyword, Pageable pageable) {
+        List<Stock> stocks;
+
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+        int startItem = currentPage * pageSize;
+
+        if (keyword.isEmpty()) stocks = stockRepository.findAll();
+        else stocks = stockRepository.findByTickerLikeIgnoreCase("%" + keyword + "%");
+
+        List<Stock> stockList;
+
+        if (stocks.size() < startItem) {
+            stockList = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + pageSize, stocks.size());
+            stockList = stocks.subList(startItem, toIndex);
+        }
+
+        return new PageImpl<>(stockList, PageRequest.of(currentPage, pageSize), stocks.size());
     }
 }
 
