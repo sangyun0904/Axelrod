@@ -12,10 +12,7 @@ import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -86,6 +83,13 @@ public class StockController {
         List<Bank> bankList = accountService.getBankListFromCSV();
         accountService.createBankByList(bankList);
         return "Bank generated";
+    }
+
+    @GetMapping("/searchStock")
+    public ResponseEntity<List<Stock>> searchStockByKeyword(@RequestParam("keyword") String keyword) {
+        List<Stock> stockList = stockTradeService.searchStockByKeyword(keyword);
+
+        return ResponseEntity.ok(stockList);
     }
 
 }

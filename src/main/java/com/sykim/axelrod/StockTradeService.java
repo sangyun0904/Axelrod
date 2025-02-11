@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -198,6 +197,11 @@ public class StockTradeService {
         Optional<Stock> stock = stockRepository.findByTicker(ticker);
         if (stock.isPresent()) return stock.get().getPrice();
         else throw new NotAvailableTickerException("Stock with " + ticker + " ticker doesn't exists");
+    }
+
+    public List<Stock> searchStockByKeyword(String keyword) {
+        if (keyword.isEmpty()) return stockRepository.findAll();
+        return stockRepository.findByTickerLikeIgnoreCase("%" + keyword + "%");
     }
 }
 

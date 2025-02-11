@@ -211,7 +211,7 @@ public class HomepageController {
         }
         dataList = alphaVantageService.getStockData(ticker);
         model.addAttribute("chartData", dataList);
-        if (userId.isPresent()) {
+        if (userId.isPresent() && !(userId.get().equals("null"))) {
             System.out.println("userId : " + userId.get());
             model.addAttribute("userId", userId.get());
         }
