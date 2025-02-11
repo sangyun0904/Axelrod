@@ -112,24 +112,42 @@
         </div>
     </div>
     <div class="box right">
-        <table>
-            <thead>
-            <tr>
-                <th> Username </th>
-                <th> email </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${players.empty}">
-                <td colspan="2"> No Stocks Available </td>
-            </tr>
-            <tr th:each="player : ${players}">
-                <td><span th:text="${player.username}"> </span></td>
-                <td><span th:text="${player.email}"> </span></td>
-            </tr>
-            </tbody>
-        </table>
-        <a href="/homepage/player/create">Create Player</a>
+        <div class="left" style="height:100%; border:0px;">
+            <table>
+                <thead>
+                <tr>
+                    <th> Username </th>
+                    <th> email </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${players.empty}">
+                    <td colspan="2"> No Stocks Available </td>
+                </tr>
+                <tr th:each="player : ${players}">
+                    <td><span th:text="${player.username}"> </span></td>
+                    <td><span th:text="${player.email}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+            <a href="/homepage/player/create">Create Player</a>
+        </div>
+        <div class="right" style="height:100%; border:0px;">
+            <table>
+                <thead>
+                <tr>
+                    <th> Title </th>
+                    <th> Content </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="news : ${newslist}">
+                    <td><a th:href="${news.url}" th:text="${news.title}"></a></td>
+                    <td><span th:text="${news.content}"></span> </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 <div>
