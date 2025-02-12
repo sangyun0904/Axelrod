@@ -40,5 +40,6 @@ public class Stock {
     public record StockCreate(String ticker, String name, String market, String sector, Double price) {}
 
     public record History(String date, Double open, Double high, Double low, Double close, Double adjClose, Long volume) {}
+
     public record StockPageData(List<Stock> stockPage, List<Integer> pageNumbers, int currentPage) {}
 }

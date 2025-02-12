@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,4 +22,6 @@ public class Newsletter {
     private String content;
     private String url;
     private LocalDate postedAt;
+
+    public record NewsPageData(List<Newsletter> newsPage, List<Integer> pageNumbers, int currentPage) {}
 }

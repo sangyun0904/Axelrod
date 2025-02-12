@@ -3,6 +3,7 @@ package com.sykim.axelrod.controller;
 
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.AccountService;
+import com.sykim.axelrod.NewsletterService;
 import com.sykim.axelrod.StockTradeService;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
 import com.sykim.axelrod.exceptions.NotAvailableTickerException;
@@ -12,6 +13,7 @@ import com.sykim.axelrod.model.*;
 import com.sykim.axelrod.model.Stock.StockCreate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +33,11 @@ public class StockController {
     private MatchingService matchingService;
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private NewsletterService newsletterService;
 
     private final int PAGE_SIZE=15;
+    private final int NEWS_PAGE_SIZE=4;
 
     @PostMapping("/issue")
     public Transaction issueStocks(
@@ -104,16 +109,43 @@ public class StockController {
         return ResponseEntity.ok(new Stock.StockPageData(stockPage.stream().toList(), pageNumbers, pageNum));
     }
 
+
+    @GetMapping("/news")
+    public ResponseEntity<Newsletter.NewsPageData> getNewsletters(@RequestParam("pageNum") int pageNum) throws IOException {
+        List<Newsletter> newsletters = newsletterService.getNewYorkTimesLetters();
+
+        int startItem = pageNum * NEWS_PAGE_SIZE;
+
+        List<Newsletter> newsList;
+
+        if (newsletters.size() < startItem) {
+            newsList = Collections.emptyList();
+        } else {
+            int toIndex = Math.min(startItem + NEWS_PAGE_SIZE, newsletters.size());
+            newsList = newsletters.subList(startItem, toIndex);
+        }
+
+        Page<Newsletter> newsPage = new PageImpl<>(newsList, PageRequest.of(pageNum, NEWS_PAGE_SIZE), newsletters.size());
+
+        int lastPage = newsPage.getTotalPages();
+        List<Integer> pageNumbers = List.of(1);
+        if (lastPage > 0) {
+            pageNumbers = getPageNumbers(pageNum, lastPage);
+        }
+
+        return ResponseEntity.ok(new Newsletter.NewsPageData(newsPage.stream().toList(), pageNumbers, pageNum));
+    }
+
     private List<Integer> getPageNumbers(int currentPage, int lastPage) {
         List<Integer> pageNumbers;
 
         if (currentPage < 5) {
-            pageNumbers = IntStream.rangeClosed(1, Math.min(10, lastPage))
+            pageNumbers = IntStream.rangeClosed(1, Math.min(10, lastPage-1))
                     .boxed()
                     .collect(Collectors.toList());
         }
         else {
-            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 5, lastPage))
+            pageNumbers = IntStream.rangeClosed(currentPage-4, Math.min(currentPage + 5, lastPage-1))
                     .boxed()
                     .collect(Collectors.toList());
         }
