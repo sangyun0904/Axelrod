@@ -6,7 +6,7 @@
     <style>
         div.box {
           width: 100%;
-          height: 500px;
+          height: 550px;
           margin-bottom: 5px
         }
         div.left {
@@ -65,64 +65,66 @@
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-<body>
+<body  onload="fetchStockSearch(1); fetchNewyorkTimeNews(1)">
 <section>
 <h1>Axelrod Stock Simulator</h1>
     <main>
 <div>
     <div class="box left">
-        <table>
-            <thead>
-            <tr>
-                <th> Ticker </th>
-                <th> Price </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${stocks.empty}">
-                <td colspan="2"> No Stocks Available </td>
-            </tr>
-            <tr th:each="stock, iStat : ${stocks}">
-                <td><a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}"><span th:text="${stock.ticker}"> </span></a></td>
-                <td><span th:text="${stock.price}"> </span></td>
-            </tr>
-            </tbody>
-        </table>
-        <br>
-        <div th:if="${stocks.totalPages > 0}" class="pagination"
-             th:each="pageNumber : ${stockPageNumbers}">
-            <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-               th:text=${pageNumber}
-               th:class="${pageNumber==stocks.number + 1} ? active"></a>
-            <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pfCurrentPage}, stockPage=${pageNumber})}"
-               th:text=${pageNumber}
-               th:class="${pageNumber==stocks.number + 1} ? active"></a>
+        <div class="left" style="border:0px">
+            <table>
+                <thead>
+                <tr>
+                    <th> Ticker </th>
+                    <th> Price </th>
+                </tr>
+                </thead>
+                <tbody id="stockTableBody">
+                <tr th:if="${stocks.empty}">
+                    <td colspan="2"> No Stocks Available </td>
+                </tr>
+                <tr th:each="stock, iStat : ${stocks}">
+                    <td><a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}"><span th:text="${stock.ticker}"> </span></a></td>
+                    <td><span th:text="${stock.price}"> </span></td>
+                </tr>
+                </tbody>
+            </table>
+            <br>
+            <div class="pagination" id="stockPagination">
+            </div>
+            <br>
+            <a href="/homepage/create">Create Stock</a>
+            <div hidden>
+                <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+            </div>
         </div>
-        <br>
-        <a href="/homepage/create">Create Stock</a>
-        <div hidden>
-            <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+        <div class="right" style="height:100%; border:0px;">
+            <br>
+            <br>
+            <p>search : <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
         </div>
     </div>
     <div class="box right">
-        <table>
-            <thead>
-            <tr>
-                <th> Username </th>
-                <th> email </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${players.empty}">
-                <td colspan="2"> No Stocks Available </td>
-            </tr>
-            <tr th:each="player : ${players}">
-                <td><span th:text="${player.username}"> </span></td>
-                <td><span th:text="${player.email}"> </span></td>
-            </tr>
-            </tbody>
-        </table>
-        <a href="/homepage/player/create">Create Player</a>
+        <div class="left" style="height:100%; border:0px;">
+            <h3>Today's News</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th> Title </th>
+                    <th> Content </th>
+                </tr>
+                </thead>
+                <tbody id="newsTable">
+                <tr th:each="news : ${newslist}">
+                    <td><a th:href="${news.url}" th:text="${news.title}"></a></td>
+                    <td><span th:text="${news.content}"></span> </td>
+                </tr>
+                </tbody>
+            </table>
+            <br>
+            <div class="pagination" id="newsPagination">
+            </div>
+        </div>
     </div>
 </div>
 <div>
@@ -164,15 +166,16 @@
                 </thead>
                 <tbody>
                 <tr th:if="${portfolios.empty}">
-                    <td colspan="4"> No Portfolios </td>
+                    <td colspan="4" style="text-align:center;"> No Portfolios </td>
                 </tr>
                 <tr th:each="pf : ${portfolios}">
                     <td><span th:text="${pf.ticker}"> </span></td>
                     <td><span th:text="${pf.quantity}"> </span></td>
                     <td>
-                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"> </span> <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice} + ' 0.0%'"> </span>
+                        <span th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"></span>
+                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
+                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="' 0.0%'"> </span>
                         <span> )</span>
                     </td>
                 </tr>
@@ -241,31 +244,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    const xValues = [50,60,70,80,90,100,110,120,130,140,150];
-    const yValues = [7,8,8,9,9,9,10,11,14,14,15];
-
-    new Chart("myChart", {
-      type: "line",
-      data: {
-        labels: xValues,
-        datasets: [{
-          fill: false,
-          lineTension: 0,
-          backgroundColor:"rgba(255,0,0,1.0)",
-          borderColor: "rgba(255,0,0,0.1)",
-          data: yValues
-        }]
-      },
-      options: {
-        legend: {display: false},
-        scales: {
-          xAxes: [{ticks: {min: 6, max:16}}],
-        }
-      }
-    });
-</script>
     </main>
     <footer>
         <p>Developer: Sangyoon Kim<br>
@@ -273,6 +251,91 @@
             Github : <a href="sangyun004@github.com">sangyun004@github.com</a></p>
     </footer>
 </section>
+
+<script th:inline="javascript">
+    let userId = [[${userId}]];
+
+    function fetchStockSearch(pageNum) {
+        let inputVal = document.getElementById("stockKeyword").value;
+
+        fetch('/searchStock?keyword=' + encodeURIComponent(inputVal) + '&pageNum=' + pageNum)
+            .then(response => response.json())
+            .then(data => {
+                let stockTable = document.getElementById("stockTableBody");
+                stockTable.innerHTML = "";
+                let stockPage = data.stockPage;
+                let pageNumbers = data.pageNumbers;
+                let currentPage = data.currentPage;
+
+                stockPage.forEach((stock, index) => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td><a href="/homepage/stock?ticker=${stock.ticker}&userId=${userId}"><span>${stock.ticker}</span></a></td>
+                    <td><span>${stock.price}</span></td>
+                    `;
+                    stockTable.appendChild(row);
+                });
+
+                let pagination = document.getElementById("stockPagination");
+                pagination.innerHTML = "";
+
+                pageNumbers.forEach((pageNum, index) => {
+                    let row = document.createElement("a");
+                    row.innerText = pageNum;
+                    row.href = "#";
+                    row.addEventListener("click", function(event) {
+                        fetchStockSearch(pageNum);
+                    });
+                    console.log(pageNum, currentPage+1);
+                    if (pageNum == currentPage) {
+                        row.className = "active";
+                    }
+                    pagination.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Error:", error));
+    }
+
+    function fetchNewyorkTimeNews(pageNum) {
+        fetch
+        fetch('/news?pageNum=' + pageNum)
+            .then(response => response.json())
+            .then(data => {
+                let newsTable = document.getElementById("newsTable");
+                newsTable.innerHTML = "";
+                let newsPage = data.newsPage;
+                let pageNumbers = data.pageNumbers;
+                let currentPage = data.currentPage;
+
+                newsPage.forEach((news, index) => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td><a href="${news.url}"><span>${news.title}</span></a></td>
+                    <td><span>${news.content}</span></td>
+                    `;
+                    newsTable.appendChild(row);
+                });
+
+                let pagination = document.getElementById("newsPagination");
+                pagination.innerHTML = "";
+
+                pageNumbers.forEach((pageNum, index) => {
+                    let row = document.createElement("a");
+                    row.innerText = pageNum;
+                    row.href = "#";
+                    row.addEventListener("click", function(event) {
+                        fetchNewyorkTimeNews(pageNum);
+                    });
+                    console.log(pageNum, currentPage+1);
+                    if (pageNum == currentPage) {
+                        row.className = "active";
+                    }
+                    pagination.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Error:", error));
+    }
+</script>
 
 </body>
 </html>

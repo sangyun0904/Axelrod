@@ -16,7 +16,7 @@
     <h1 th:text="${ticker}"></h1>
     <div id="container"></div>
     <div>
-        <tr th:if="${userId != ''}">
+        <tr th:if="${userId != '' && userId != null}">
             <p><a th:href="'/homepage/buy?ticker=' + ${ticker} + '&userId=' + ${userId}">Buy Stock</a> <a th:href="'/homepage/sell?ticker=' + ${ticker} + '&userId=' + ${userId}">Sell Stock</a></p>
         </tr>
     </div>

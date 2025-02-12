@@ -12,6 +12,7 @@ import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
@@ -49,11 +50,11 @@ public class MatchingExecutorPool {
 
     @Scheduled(fixedRate = 500)
     public void findMatch() {
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+//        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
-        System.out.println(tickerList.size() / LOOP_NUM);
+//        System.out.println(tickerList.size() / LOOP_NUM);
 
         for (int i=0; i < LOOP_NUM; i++) {
             int idx = stockMatchingLoopIndex * LOOP_NUM + i;
@@ -71,9 +72,10 @@ public class MatchingExecutorPool {
             }
         }
         stockMatchingLoopIndex = (stockMatchingLoopIndex + 1) % (tickerList.size() / LOOP_NUM + 1);
-        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+//        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
     }
 
+    @Transactional
     private Transaction matchTransaction(String ticker, Tuple buyOrderTuple, Tuple sellOrderTuple) throws NotEnoughBalanceException, AccountDoseNotExistException {
         // TODO : - 주식 판매 금액이 구매 수량 금액보다 높으면 null 리턴
         //        - 판매 수량이 같거나 더 많으면 Transaction 생성 및 Player Portfolio 수정
