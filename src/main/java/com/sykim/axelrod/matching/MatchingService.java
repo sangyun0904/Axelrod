@@ -50,7 +50,7 @@ public class MatchingService {
             // ZADD 명령으로 매수/매도 주문 추가
             jedis.zadd(orderKey, price, "{\"orderId\":\"" + orderId + "\",\"quantity\":" + quantity + ",\"userId\":\"" + userId + "\"}");
 
-            System.out.println("order book: " + jedis.zrangeWithScores(orderKey, 0, -1));
+//            System.out.println("order book: " + jedis.zrangeWithScores(orderKey, 0, -1));
         } catch (Exception e) {
             e.printStackTrace();
         }

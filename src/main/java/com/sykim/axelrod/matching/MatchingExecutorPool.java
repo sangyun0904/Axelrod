@@ -48,8 +48,9 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-    @Scheduled(fixedRate = 500)
+    @Scheduled(fixedRate = 100)
     public void findMatch() {
+        System.out.println(Thread.currentThread().getName() + " - 실행됨");
 //        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
@@ -85,11 +86,11 @@ public class MatchingExecutorPool {
         // 구매 주문 가격이 판매 주문 가격보다 높거나 같으면 거래 채결
         if (buyOrderTuple.getScore() >= sellOrderTuple.getScore()) {
             Gson gson = new Gson();
-            System.out.println(buyOrderTuple.getScore() >= sellOrderTuple.getScore());
+//            System.out.println(buyOrderTuple.getScore() >= sellOrderTuple.getScore());
             Transaction.RedisOrder buyOrder = gson.fromJson(buyOrderTuple.getElement(), Transaction.RedisOrder.class);
-            System.out.println(buyOrder.orderId());
+//            System.out.println(buyOrder.orderId());
             Transaction.RedisOrder sellOrder = gson.fromJson(sellOrderTuple.getElement(), Transaction.RedisOrder.class);
-            System.out.println(sellOrder.orderId());
+//            System.out.println(sellOrder.orderId());
 
             // 중간 가격으로 거래 진행
             Double transactionPrice = (buyOrderTuple.getScore() + sellOrderTuple.getScore()) / 2;
