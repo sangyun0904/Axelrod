@@ -15,7 +15,9 @@
 
 ### 1.2 주요 기능
 메인 화면 : 
-<img width="1787" alt="image" src="https://github.com/user-attachments/assets/7db872c6-7a12-4575-a978-c40261cac9a7" />
+<img width="1791" alt="axelrodMain" src="https://github.com/user-attachments/assets/2ea0f7c7-526e-4ff4-819e-2dd9c18cd0ba" />
+
+
 
 회원가입 및 계좌 생성 후 주식 거래 가능
 
