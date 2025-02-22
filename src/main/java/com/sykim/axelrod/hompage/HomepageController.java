@@ -97,7 +97,8 @@ public class HomepageController {
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
-        List<Newsletter> newsList = newsletterService.getNewYorkTimesLetters();
+//        List<Newsletter> newsList = newsletterService.getNewYorkTimesLetters();
+        List<Newsletter> newsList = new ArrayList<>();
         model.addAttribute("newslist", newsList);
 
         return "homePage";

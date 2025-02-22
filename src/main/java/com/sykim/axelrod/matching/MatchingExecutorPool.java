@@ -10,6 +10,7 @@ import com.sykim.axelrod.model.Stock;
 import com.sykim.axelrod.model.Transaction;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.resps.Tuple;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +36,7 @@ public class MatchingExecutorPool {
 
     private final int LOOP_NUM=300;
     private int stockMatchingLoopIndex = 0;
+    private boolean noMoreTrades = false;
 
     @Autowired
     JedisPool jedisPool;
@@ -41,6 +44,7 @@ public class MatchingExecutorPool {
     TransactionOrderListComponent transactionOrderListComponent;
 
     private boolean systemRunning = true;
+    private int tradeCount = 0;
     @PreDestroy
     public void onDestroy() {
         systemRunning = false;
@@ -48,16 +52,18 @@ public class MatchingExecutorPool {
 
     public List<String> tickerList = new ArrayList<>();
 
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedRate = 1000)
     public void findMatch() {
-        System.out.println(Thread.currentThread().getName() + " - 실행됨");
+        noMoreTrades = true;
 //        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         List<Stock> stockList = stockTradeService.getAllStocks();
         tickerList = stockList.stream().map(Stock::getTicker).toList();
 
 //        System.out.println(tickerList.size() / LOOP_NUM);
 
-        for (int i=0; i < LOOP_NUM; i++) {
+        long start = System.currentTimeMillis();
+        System.out.println(Thread.currentThread().getName() + " - 실행됨 " + LocalTime.now());
+        for (int i=0; i < tickerList.size(); i++) {
             int idx = stockMatchingLoopIndex * LOOP_NUM + i;
             if (tickerList.size() <= idx) break;
             String t = tickerList.get(idx);
@@ -72,8 +78,13 @@ public class MatchingExecutorPool {
 //                System.out.println(e.getMessage());
             }
         }
-        stockMatchingLoopIndex = (stockMatchingLoopIndex + 1) % (tickerList.size() / LOOP_NUM + 1);
+        System.out.println(Thread.currentThread().getName() + " - 종료됨 소요된 시간 : " + (System.currentTimeMillis() - start) / 1000d + "sec");
+//        stockMatchingLoopIndex = (stockMatchingLoopIndex + 1) % (tickerList.size() / LOOP_NUM + 1);
 //        System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
+        if (noMoreTrades) {
+            System.out.println("거래 종료 : " + LocalDateTime.now());
+            System.out.println("거래 횟수 : " + tradeCount);
+        }
     }
 
     @Transactional
@@ -85,6 +96,8 @@ public class MatchingExecutorPool {
 
         // 구매 주문 가격이 판매 주문 가격보다 높거나 같으면 거래 채결
         if (buyOrderTuple.getScore() >= sellOrderTuple.getScore()) {
+            noMoreTrades = false;
+            tradeCount+=1;
             Gson gson = new Gson();
 //            System.out.println(buyOrderTuple.getScore() >= sellOrderTuple.getScore());
             Transaction.RedisOrder buyOrder = gson.fromJson(buyOrderTuple.getElement(), Transaction.RedisOrder.class);

@@ -1,254 +1,348 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Getting Started: Serving Web Content</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Axelrod Stock Simulator</title>
+    <meta charset="UTF-8" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        div.box {
-          width: 100%;
-          height: 550px;
-          margin-bottom: 5px
+        /* 기본 리셋 및 전역 설정 */
+        * {
+            box-sizing: border-box;
         }
-        div.left {
-          width: 49.9%;
-          float: left;
-          box-sizing: border-box;
-          padding: 10px;
-          border: 3px solid #003458;
-        }
-        div.right {
-          width: 49.9%;
-          float: right;
-          box-sizing: border-box;
-          padding: 10px;
-          border: 3px solid #003458;
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333;
         }
         a {
-          margin-right: 10px;
-        }
-        .pagination {
-            display: inline-block;
-        }
-
-        .pagination a {
-            color: black;
-            float: left;
-            padding: 5px 5px;
             text-decoration: none;
+            color: #003458;
+            transition: color 0.3s;
         }
-
+        a:hover {
+            color: #005a8e;
+        }
+        h1, h3 {
+            margin: 0 0 15px 0;
+            color: #003458;
+        }
+        /* 컨테이너 스타일 */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        /* 박스 및 레이아웃 */
+        .box {
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .left, .right {
+            float: left;
+            width: 49.9%;
+            padding: 10px;
+        }
+        .left {
+            border-right: 1px solid #e0e0e0;
+        }
+        .right {
+            border-left: 1px solid #e0e0e0;
+        }
+        /* 테이블 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        /* 폼 및 입력 요소 */
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"],
+        input[type="reset"] {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #003458;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover,
+        input[type="reset"]:hover {
+            background-color: #005a8e;
+        }
+        /* Pagination 스타일 */
+        .pagination {
+            text-align: center;
+            margin: 10px 0;
+        }
+        .pagination a {
+            display: inline-block;
+            margin: 0 3px;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #003458;
+        }
         .pagination a.active {
-            background-color: gray;
-            color: white;
-            border-radius: 2px;
+            background-color: #003458;
+            color: #fff;
+            border-color: #003458;
         }
-
+        .pagination a:hover {
+            background-color: #005a8e;
+            color: #fff;
+            border-color: #005a8e;
+        }
+        /* Footer 스타일 */
         footer {
-          text-align: center;
-          padding: 3px;
-          background-color: darkslategrey;
-          color: white;
+            text-align: center;
+            padding: 10px;
+            background-color: #68a832;
+            color: #fff;
+            font-size: 14px;
         }
-
-        main {
-          display: flex;
-          flex-direction: column;
-        }
-
-        span.red {
-             color: red;
-        }
-
-        span.blue {
-             color: blue;
+        /* 반응형 미디어 쿼리 */
+        @media (max-width: 768px) {
+            .left, .right {
+                width: 100%;
+                float: none;
+                border: none;
+                padding: 5px;
+            }
+            .left {
+                border-bottom: 1px solid #e0e0e0;
+            }
         }
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-<body  onload="fetchStockSearch(1); fetchNewyorkTimeNews(1)">
-<section>
-<h1>Axelrod Stock Simulator</h1>
+<body onload="fetchStockSearch(1); fetchNewyorkTimeNews(1)">
+<section class="container">
+    <h1>Axelrod Stock Simulator</h1>
     <main>
-<div>
-    <div class="box left">
-        <div class="left" style="border:0px">
-            <table>
-                <thead>
-                <tr>
-                    <th> Ticker </th>
-                    <th> Price </th>
-                </tr>
-                </thead>
-                <tbody id="stockTableBody">
-                <tr th:if="${stocks.empty}">
-                    <td colspan="2"> No Stocks Available </td>
-                </tr>
-                <tr th:each="stock, iStat : ${stocks}">
-                    <td><a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}"><span th:text="${stock.ticker}"> </span></a></td>
-                    <td><span th:text="${stock.price}"> </span></td>
-                </tr>
-                </tbody>
-            </table>
-            <br>
-            <div class="pagination" id="stockPagination">
-            </div>
-            <br>
-            <a href="/homepage/create">Create Stock</a>
-            <div hidden>
-                <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
-            </div>
-        </div>
-        <div class="right" style="height:100%; border:0px;">
-            <br>
-            <br>
-            <p>search : <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
-        </div>
-    </div>
-    <div class="box right">
-        <div class="left" style="height:100%; border:0px;">
-            <h3>Today's News</h3>
-            <table>
-                <thead>
-                <tr>
-                    <th> Title </th>
-                    <th> Content </th>
-                </tr>
-                </thead>
-                <tbody id="newsTable">
-                <tr th:each="news : ${newslist}">
-                    <td><a th:href="${news.url}" th:text="${news.title}"></a></td>
-                    <td><span th:text="${news.content}"></span> </td>
-                </tr>
-                </tbody>
-            </table>
-            <br>
-            <div class="pagination" id="newsPagination">
-            </div>
-        </div>
-    </div>
-</div>
-<div>
-    <div th:if="${userId == null}" class="box left">
-        <h3>Login</h3>
-        <form action="#" th:action="@{/homepage/login}" th:object="${user}" method="post">
-            <p>Username: <input type="text" th:field="*{username}" /></p>
-            <p>Password: <input type="text" th:field="*{password}" /></p>
-            <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
-        </form>
-    </div>
-    <div th:if="${userId != null}" class="box left">
-        <div class="left" style="border:0px">
-            <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
-            <p><a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a><a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a></p>
-            <table>
-                <thead>
-                    <tr><th style="text-align: left">Account Number</th><th style="text-align: left">Balance</th></tr>
-                </thead>
-                <tbody>
-                    <tr th:each="account: ${accounts}">
-                        <td><span th:text="${account.accountNum}"></span></td><td><span th:text="${account.balance}"></span></td>
-                        <td><a th:href="'/homepage/deposit?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Add balance</a></td>
-                        <td><a th:href="'/homepage/withdrawal?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">Withdraw balance</a></td>
+        <div class="box">
+            <div class="left">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Price</th>
                     </tr>
-                </tbody>
-            </table>
-            <p><a th:href="'/homepage/create/account?userId=' + ${userId}">Create Account</a><a href="/homepage/logout">Log Out</a></p>
-        </div>
-        <div class="right" style="height:100%; border:0px;">
-            <table style="margin:auto; width:100%">
-                <caption><b>User Portfolio</b></caption>
-                <thead>
-                <tr>
-                    <th> StockId </th>
-                    <th> Quantity </th>
-                    <th> Current Price </th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${portfolios.empty}">
-                    <td colspan="4" style="text-align:center;"> No Portfolios </td>
-                </tr>
-                <tr th:each="pf : ${portfolios}">
-                    <td><span th:text="${pf.ticker}"> </span></td>
-                    <td><span th:text="${pf.quantity}"> </span></td>
-                    <td>
-                        <span th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"></span>
-                        <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
-                        <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="' 0.0%'"> </span>
-                        <span> )</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <br>
-            <div th:if="${portfolios.totalPages > 0}" class="pagination"
-                 th:each="pageNumber : ${portfolioPageNumbers}">
-                <a th:if="${userId == null}" th:href="@{/homepage(pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==portfolios.number + 1} ? active"></a>
-                <a th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
-                   th:text=${pageNumber}
-                   th:class="${pageNumber==portfolios.number + 1} ? active"></a>
+                    </thead>
+                    <tbody id="stockTableBody">
+                    <tr th:if="${stocks.empty}">
+                        <td colspan="2">No Stocks Available</td>
+                    </tr>
+                    <tr th:each="stock, iStat : ${stocks}">
+                        <td>
+                            <a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}">
+                                <span th:text="${stock.ticker}"></span>
+                            </a>
+                        </td>
+                        <td><span th:text="${stock.price}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="pagination" id="stockPagination"></div>
+                <a href="/homepage/create">Create Stock</a>
+                <div hidden>
+                    <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+                </div>
+            </div>
+            <div class="right">
+                <p>Search: <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
             </div>
         </div>
-    </div>
-    <div class="box right">
-        <div class="left" style="border:0px;">
-            <table style="margin:auto; width:90%">
-                <caption><b>Current Buy Order</b></caption>
-                <thead>
-                <tr>
-                    <th> Ticker </th>
-                    <th> Quantity </th>
-                    <th> Price </th>
-                    <th> Player </th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${buyOrderList.empty}">
-                    <td colspan="4" style="text-align:center;"> No Buy Order </td>
-                </tr>
-                <tr th:each="order : ${buyOrderList}">
-                    <td><span th:text="${order.ticker}"> </span></td>
-                    <td><span th:text="${order.quantity}"> </span></td>
-                    <td><span th:text="${order.price}"> </span></td>
-                    <td><span th:text="${order.playerId}"> </span></td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="box">
+            <div class="left" style="width: 100%; border-right: none;">
+                <h3>Today's News</h3>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Content</th>
+                    </tr>
+                    </thead>
+                    <tbody id="newsTable">
+                    <tr th:each="news : ${newslist}">
+                        <td>
+                            <a th:href="${news.url}" th:text="${news.title}"></a>
+                        </td>
+                        <td><span th:text="${news.content}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="pagination" id="newsPagination"></div>
+            </div>
         </div>
-        <div class="right" style="border:0px;">
-            <table style="margin:auto; width:90%">
-                <caption><b>Current Sell Order</b></caption>
-                <thead>
-                <tr>
-                    <th> Ticker </th>
-                    <th> Quantity </th>
-                    <th> Price </th>
-                    <th> Player </th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${sellOrderList.empty}">
-                    <td colspan="4" style="text-align:center;"> No Sell Order </td>
-                </tr>
-                <tr th:each="order : ${sellOrderList}">
-                    <td><span th:text="${order.ticker}"> </span></td>
-                    <td><span th:text="${order.quantity}"> </span></td>
-                    <td><span th:text="${order.price}"> </span></td>
-                    <td><span th:text="${order.playerId}"> </span></td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="box">
+            <div th:if="${userId == null}" style="width: 100%;">
+                <h3>Login</h3>
+                <form action="#" th:action="@{/homepage/login}" th:object="${user}" method="post">
+                    <p>Username: <input type="text" th:field="*{username}" /></p>
+                    <p>Password: <input type="text" th:field="*{password}" /></p>
+                    <p>
+                        <input type="submit" value="Submit" />
+                        <input type="reset" value="Reset" />
+                    </p>
+                </form>
+            </div>
+            <div th:if="${userId != null}" style="width: 100%;">
+                <div class="left" style="width: 48%; border-right: none; padding-right: 20px;">
+                    <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
+                    <p>
+                        <a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a>
+                        <a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a>
+                    </p>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Balance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="account: ${accounts}">
+                            <td><span th:text="${account.accountNum}"></span></td>
+                            <td><span th:text="${account.balance}"></span></td>
+                            <td>
+                                <a th:href="'/homepage/deposit?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">
+                                    Add balance
+                                </a>
+                            </td>
+                            <td>
+                                <a th:href="'/homepage/withdrawal?userId=' + ${userId} + '&accountNum=' + ${account.accountNum}">
+                                    Withdraw balance
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p>
+                        <a th:href="'/homepage/create/account?userId=' + ${userId}">Create Account</a>
+                        <a href="/homepage/logout">Log Out</a>
+                    </p>
+                </div>
+                <div class="right" style="width: 48%; border-left: none; padding-left: 20px;">
+                    <table>
+                        <caption><b>User Portfolio</b></caption>
+                        <thead>
+                        <tr>
+                            <th>StockId</th>
+                            <th>Quantity</th>
+                            <th>Current Price</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${portfolios.empty}">
+                            <td colspan="4" style="text-align:center;">No Portfolios</td>
+                        </tr>
+                        <tr th:each="pf : ${portfolios}">
+                            <td><span th:text="${pf.ticker}"></span></td>
+                            <td><span th:text="${pf.quantity}"></span></td>
+                            <td>
+                                <span th:text="${pf.stockCurrentPrice} + '  ( ' + ${pf.myAvgPrice}"></span>
+                                <span th:if="${pf.stockCurrentPrice} > ${pf.myAvgPrice}" th:class="red" th:text="' +' + ${pf.differencePercent}"></span>
+                                <span th:if="${pf.stockCurrentPrice} < ${pf.myAvgPrice}" th:class="blue" th:text="' -' + ${pf.differencePercent}"></span>
+                                <span th:if="${pf.stockCurrentPrice} == ${pf.myAvgPrice}" th:text="' 0.0%'"></span>
+                                <span>)</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${portfolios.totalPages > 0}" class="pagination">
+                        <a th:each="pageNumber : ${portfolioPageNumbers}" th:if="${userId == null}" th:href="@{/homepage(pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
+                           th:text="${pageNumber}"
+                           th:class="${pageNumber==portfolios.number + 1} ? active"></a>
+                        <a th:each="pageNumber : ${portfolioPageNumbers}" th:if="${userId != null}" th:href="@{/homepage(userId=${userId}, pfPage=${pageNumber}, stockPage=${stockCurrentPage})}"
+                           th:text="${pageNumber}"
+                           th:class="${pageNumber==portfolios.number + 1} ? active"></a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+        <div class="box">
+            <div class="left" style="width: 48%; border-right: none;">
+                <table>
+                    <caption><b>Current Buy Order</b></caption>
+                    <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Player</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${buyOrderList.empty}">
+                        <td colspan="4" style="text-align:center;">No Buy Order</td>
+                    </tr>
+                    <tr th:each="order : ${buyOrderList}">
+                        <td><span th:text="${order.ticker}"></span></td>
+                        <td><span th:text="${order.quantity}"></span></td>
+                        <td><span th:text="${order.price}"></span></td>
+                        <td><span th:text="${order.playerId}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="right" style="width: 48%; border-left: none;">
+                <table>
+                    <caption><b>Current Sell Order</b></caption>
+                    <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Player</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${sellOrderList.empty}">
+                        <td colspan="4" style="text-align:center;">No Sell Order</td>
+                    </tr>
+                    <tr th:each="order : ${sellOrderList}">
+                        <td><span th:text="${order.ticker}"></span></td>
+                        <td><span th:text="${order.quantity}"></span></td>
+                        <td><span th:text="${order.price}"></span></td>
+                        <td><span th:text="${order.playerId}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
     <footer>
         <p>Developer: Sangyoon Kim<br>
-            Email : <a href="projectaxelrod@gmail.com">projectaxelrod@gmail.com</a><br>
-            Github : <a href="sangyun004@github.com">sangyun004@github.com</a></p>
+            Email: <a href="mailto:projectaxelrod@gmail.com">projectaxelrod@gmail.com</a><br>
+            Github: <a href="https://github.com/sangyun004">sangyun004@github.com</a></p>
     </footer>
 </section>
 
@@ -267,7 +361,7 @@
                 let pageNumbers = data.pageNumbers;
                 let currentPage = data.currentPage;
 
-                stockPage.forEach((stock, index) => {
+                stockPage.forEach((stock) => {
                     let row = document.createElement("tr");
                     row.innerHTML = `
                     <td><a href="/homepage/stock?ticker=${stock.ticker}&userId=${userId}"><span>${stock.ticker}</span></a></td>
@@ -279,14 +373,13 @@
                 let pagination = document.getElementById("stockPagination");
                 pagination.innerHTML = "";
 
-                pageNumbers.forEach((pageNum, index) => {
+                pageNumbers.forEach((pageNum) => {
                     let row = document.createElement("a");
                     row.innerText = pageNum;
                     row.href = "#";
-                    row.addEventListener("click", function(event) {
+                    row.addEventListener("click", function() {
                         fetchStockSearch(pageNum);
                     });
-                    console.log(pageNum, currentPage+1);
                     if (pageNum == currentPage) {
                         row.className = "active";
                     }
@@ -297,7 +390,6 @@
     }
 
     function fetchNewyorkTimeNews(pageNum) {
-        fetch
         fetch('/news?pageNum=' + pageNum)
             .then(response => response.json())
             .then(data => {
@@ -307,7 +399,7 @@
                 let pageNumbers = data.pageNumbers;
                 let currentPage = data.currentPage;
 
-                newsPage.forEach((news, index) => {
+                newsPage.forEach((news) => {
                     let row = document.createElement("tr");
                     row.innerHTML = `
                     <td><a href="${news.url}"><span>${news.title}</span></a></td>
@@ -319,14 +411,13 @@
                 let pagination = document.getElementById("newsPagination");
                 pagination.innerHTML = "";
 
-                pageNumbers.forEach((pageNum, index) => {
+                pageNumbers.forEach((pageNum) => {
                     let row = document.createElement("a");
                     row.innerText = pageNum;
                     row.href = "#";
-                    row.addEventListener("click", function(event) {
+                    row.addEventListener("click", function() {
                         fetchNewyorkTimeNews(pageNum);
                     });
-                    console.log(pageNum, currentPage+1);
                     if (pageNum == currentPage) {
                         row.className = "active";
                     }
@@ -336,6 +427,5 @@
             .catch(error => console.error("Error:", error));
     }
 </script>
-
 </body>
 </html>

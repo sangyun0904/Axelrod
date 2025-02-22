@@ -2,16 +2,114 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+    <style>
+        /* 글로벌 리셋 및 기본 스타일 */
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          font-family: 'Roboto', sans-serif;
+          background-color: #f7f9fc;
+          color: #333;
+          padding: 20px;
+        }
+        /* 중앙 정렬 컨테이너 */
+        .container {
+          max-width: 400px;
+          margin: 50px auto;
+          background-color: #fff;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+          text-align: center;
+          margin-bottom: 20px;
+          color: #003458;
+        }
+        /* 폼 스타일 */
+        form {
+          display: flex;
+          flex-direction: column;
+        }
+        form p {
+          margin-bottom: 15px;
+        }
+        label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: 500;
+        }
+        select, input[type="text"] {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 1rem;
+        }
+        select:focus, input[type="text"]:focus {
+          outline: none;
+          border-color: #005a8e;
+        }
+        /* 버튼 스타일 */
+        .button-group {
+          display: flex;
+          justify-content: space-between;
+        }
+        input[type="submit"],
+        input[type="reset"] {
+          width: 48%;
+          padding: 10px;
+          border: none;
+          border-radius: 4px;
+          background-color: #003458;
+          color: #fff;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover,
+        input[type="reset"]:hover {
+          background-color: #005a8e;
+        }
+        /* 반응형 미디어 쿼리 */
+        @media (max-width: 480px) {
+          .container {
+            margin: 20px;
+            padding: 20px;
+          }
+          .button-group {
+            flex-direction: column;
+          }
+          .button-group input {
+            width: 100%;
+            margin-bottom: 10px;
+          }
+        }
+    </style>
 </head>
 <body>
+<div class="container">
+    <h1>Create Account</h1>
     <form action="#" th:action="'/homepage/create/account'" th:object="${createAccount}" method="post">
-    <p><input hidden type="text" name="playerId" th:value="${userId}"/></p>
-    <select th:field="*{bankName}">
-        <option value="0">select option</option>
-        <option th:each="bank : ${banks}" th:value="${bank.name}" th:text="${bank.name}"></option>
-    </select>
-    <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
+        <input type="hidden" name="playerId" th:value="${userId}" />
+        <p>
+            <label for="bankName">Bank Name:</label>
+            <select id="bankName" th:field="*{bankName}">
+                <option value="0">Select Option</option>
+                <option th:each="bank : ${banks}" th:value="${bank.name}" th:text="${bank.name}"></option>
+            </select>
+        </p>
+        <div class="button-group">
+            <input type="submit" value="Submit" />
+            <input type="reset" value="Reset" />
+        </div>
     </form>
+</div>
 </body>
 </html>

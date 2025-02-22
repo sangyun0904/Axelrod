@@ -1,19 +1,97 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text=" ${type} + ' Stock Form'"></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${type} + ' Stock Form'"></title>
+    <style>
+        /* 기본 리셋 및 전역 스타일 */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        /* 중앙 정렬된 컨테이너 */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        /* 폼 스타일 */
+        form p {
+            margin-bottom: 15px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        form input[type="text"],
+        form input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form input[type="submit"],
+        form input[type="reset"] {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        form input[type="submit"]:hover,
+        form input[type="reset"]:hover {
+            background-color: #0056b3;
+        }
+        /* 모바일 반응형 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            form input[type="submit"],
+            form input[type="reset"] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1  th:text=" ${type} + ' Stock Form'"></h1>
-<form action="#" th:action="'/homepage/' + ${type}" th:object="${order}" method="post">
-    <p><input hidden type="text" name="playerId" th:value="${userId}"/></p>
-    <p><input hidden type="text" name="ticker" th:value="${ticker}" /></p>
-    <p th:text="'Ticker : ' + ${ticker}"></p>
-    <p></p>
-    <p>quantity: <input type="number" th:field="*{quantity}" /></p>
-    <p>price: <input type="text" th:field="*{price}" /></p>
-    <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
-</form>
+<div class="container">
+    <h1 th:text="${type} + ' Stock Form'"></h1>
+    <form action="#" th:action="'/homepage/' + ${type}" th:object="${order}" method="post">
+        <input type="hidden" name="playerId" th:value="${userId}" />
+        <input type="hidden" name="ticker" th:value="${ticker}" />
+        <p th:text="'Ticker : ' + ${ticker}"></p>
+        <p>
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" th:field="*{quantity}" />
+        </p>
+        <p>
+            <label for="price">Price:</label>
+            <input type="text" id="price" th:field="*{price}" />
+        </p>
+        <p>
+            <input type="submit" value="Submit" />
+            <input type="reset" value="Reset" />
+        </p>
+    </form>
+</div>
 </body>
 </html>
