@@ -112,7 +112,8 @@ public class StockController {
 
     @GetMapping("/news")
     public ResponseEntity<Newsletter.NewsPageData> getNewsletters(@RequestParam("pageNum") int pageNum) throws IOException {
-        List<Newsletter> newsletters = newsletterService.getNewYorkTimesLetters();
+//        List<Newsletter> newsletters = newsletterService.getNewYorkTimesLetters();
+        List<Newsletter> newsletters = new ArrayList<>();
 
         int startItem = pageNum * NEWS_PAGE_SIZE;
 
