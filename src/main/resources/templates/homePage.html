@@ -143,65 +143,10 @@
     </style>
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-<body onload="fetchStockSearch(1); fetchNewyorkTimeNews(1)">
+<body onload="fetchStockSearch(1);">
 <section class="container">
     <h1>Axelrod Stock Simulator</h1>
     <main>
-        <div class="box">
-            <div class="left">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Ticker</th>
-                        <th>Price</th>
-                    </tr>
-                    </thead>
-                    <tbody id="stockTableBody">
-                    <tr th:if="${stocks.empty}">
-                        <td colspan="2">No Stocks Available</td>
-                    </tr>
-                    <tr th:each="stock, iStat : ${stocks}">
-                        <td>
-                            <a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}">
-                                <span th:text="${stock.ticker}"></span>
-                            </a>
-                        </td>
-                        <td><span th:text="${stock.price}"></span></td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="pagination" id="stockPagination"></div>
-                <a href="/homepage/create">Create Stock</a>
-                <div hidden>
-                    <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
-                </div>
-            </div>
-            <div class="right">
-                <p>Search: <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
-            </div>
-        </div>
-        <div class="box">
-            <div class="left" style="width: 100%; border-right: none;">
-                <h3>Today's News</h3>
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Content</th>
-                    </tr>
-                    </thead>
-                    <tbody id="newsTable">
-                    <tr th:each="news : ${newslist}">
-                        <td>
-                            <a th:href="${news.url}" th:text="${news.title}"></a>
-                        </td>
-                        <td><span th:text="${news.content}"></span></td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="pagination" id="newsPagination"></div>
-            </div>
-        </div>
         <div class="box">
             <div th:if="${userId == null}" style="width: 100%;">
                 <h3>Login</h3>
@@ -286,6 +231,39 @@
                            th:class="${pageNumber==portfolios.number + 1} ? active"></a>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="box">
+            <div class="left">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Price</th>
+                    </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                    <tr th:if="${stocks.empty}">
+                        <td colspan="2">No Stocks Available</td>
+                    </tr>
+                    <tr th:each="stock, iStat : ${stocks}">
+                        <td>
+                            <a th:href="@{/homepage/stock(ticker=${stock.ticker}, userId=${userId})}">
+                                <span th:text="${stock.ticker}"></span>
+                            </a>
+                        </td>
+                        <td><span th:text="${stock.price}"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="pagination" id="stockPagination"></div>
+                <a href="/homepage/create">Create Stock</a>
+                <div hidden>
+                    <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+                </div>
+            </div>
+            <div class="right">
+                <p>Search: <input id="stockKeyword" type="text" name="stockSearch" oninput="fetchStockSearch(1)"/></p>
             </div>
         </div>
         <div class="box">
@@ -379,44 +357,6 @@
                     row.href = "#";
                     row.addEventListener("click", function() {
                         fetchStockSearch(pageNum);
-                    });
-                    if (pageNum == currentPage) {
-                        row.className = "active";
-                    }
-                    pagination.appendChild(row);
-                });
-            })
-            .catch(error => console.error("Error:", error));
-    }
-
-    function fetchNewyorkTimeNews(pageNum) {
-        fetch('/news?pageNum=' + pageNum)
-            .then(response => response.json())
-            .then(data => {
-                let newsTable = document.getElementById("newsTable");
-                newsTable.innerHTML = "";
-                let newsPage = data.newsPage;
-                let pageNumbers = data.pageNumbers;
-                let currentPage = data.currentPage;
-
-                newsPage.forEach((news) => {
-                    let row = document.createElement("tr");
-                    row.innerHTML = `
-                    <td><a href="${news.url}"><span>${news.title}</span></a></td>
-                    <td><span>${news.content}</span></td>
-                    `;
-                    newsTable.appendChild(row);
-                });
-
-                let pagination = document.getElementById("newsPagination");
-                pagination.innerHTML = "";
-
-                pageNumbers.forEach((pageNum) => {
-                    let row = document.createElement("a");
-                    row.innerText = pageNum;
-                    row.href = "#";
-                    row.addEventListener("click", function() {
-                        fetchNewyorkTimeNews(pageNum);
                     });
                     if (pageNum == currentPage) {
                         row.className = "active";
