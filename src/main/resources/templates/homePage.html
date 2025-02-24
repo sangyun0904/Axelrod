@@ -157,15 +157,12 @@
                         <input type="submit" value="Submit" />
                         <input type="reset" value="Reset" />
                     </p>
+                    <p> Test User { Username: test, Password: test }</p>
                 </form>
             </div>
             <div th:if="${userId != null}" style="width: 100%;">
                 <div class="left" style="width: 48%; border-right: none; padding-right: 20px;">
                     <h3 th:text="'Hello ' + ${userId} + '!'"></h3>
-                    <p>
-                        <a th:href="'/homepage/buy?userId=' + ${userId}">Buy Stock</a>
-                        <a th:href="'/homepage/sell?userId=' + ${userId}">Sell Stock</a>
-                    </p>
                     <table>
                         <thead>
                         <tr>

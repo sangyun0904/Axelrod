@@ -1,8 +1,10 @@
 package com.sykim.axelrod;
 
 import com.sykim.axelrod.model.Stock;
+import com.sykim.axelrod.repository.StockRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -16,6 +18,9 @@ import java.util.List;
 
 @Service
 public class AlphaVantageService {
+
+    @Autowired
+    private StockRepository stockRepository;
 
     public List<Stock.History> getStockData(String ticker) throws IOException {
 
@@ -46,6 +51,7 @@ public class AlphaVantageService {
 
 //        System.out.println(data);
         JSONObject jsonObject = new JSONObject(data).getJSONObject("Time Series (Daily)");
+        String latestRefreshedDate = new JSONObject(data).getJSONObject("Meta Data").getString("3. Last Refreshed");
 
         JSONArray keys = jsonObject.names();
 
@@ -59,6 +65,12 @@ public class AlphaVantageService {
                     , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
                     , Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close"))
                     , Long.parseLong(jsonObject.getJSONObject(key).getString("5. volume"))));
+
+            if (key.equals(latestRefreshedDate)) {
+                Stock stock = stockRepository.findByTicker(ticker).get();
+                stock.setCurrentPrice(Double.parseDouble(jsonObject.getJSONObject(key).getString("4. close")));
+                stockRepository.save(stock);
+            }
 
         }
 
