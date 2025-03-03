@@ -211,7 +211,11 @@ public class HomepageController {
                     , Double.parseDouble(record[5])
                     , Long.parseLong(record[6])));
         }
-        dataList = alphaVantageService.getStockData(ticker);
+        if (ticker.equals("IBM")) {
+            dataList = alphaVantageService.getStockData(ticker);
+        } else {
+            dataList = stockTradeService.getStockHistoryDataByTicker(ticker);
+        }
         model.addAttribute("chartData", dataList);
         if (userId.isPresent() && !(userId.get().equals("null"))) {
             System.out.println("userId : " + userId.get());

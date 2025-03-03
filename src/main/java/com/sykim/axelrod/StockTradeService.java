@@ -224,5 +224,31 @@ public class StockTradeService {
 
         return new PageImpl<>(stockList, PageRequest.of(currentPage, pageSize), stocks.size());
     }
+
+    public List<Stock.History> getStockHistoryDataByTicker(String ticker) {
+        List<Transaction> transactionList = transactionRepository.findAllByTicker(ticker);
+
+        Map<LocalDate, Stock.History> historyMap = new HashMap<>();
+
+        for (Transaction transaction : transactionList) {
+            LocalDate date = transaction.getTransactionDate();
+
+
+            if (historyMap.containsKey(date)) {
+                Stock.History history = historyMap.get(date);
+
+                Double highPrice = transaction.getPrice() > history.high() ? transaction.getPrice() : history.high();
+                Double lowPrice = transaction.getPrice() < history.low() ? transaction.getPrice() : history.low();
+
+                historyMap.replace(date, new Stock.History(date.toString(), history.open(), highPrice, lowPrice, transaction.getPrice(), transaction.getPrice(), history.volume() + 1));
+
+            }
+            else {
+                historyMap.put(date, new Stock.History(date.toString(), transaction.getPrice(), transaction.getPrice(), transaction.getPrice(), transaction.getPrice(), transaction.getPrice(), 1L));
+            }
+        }
+
+        return historyMap.values().stream().toList();
+    }
 }
 
