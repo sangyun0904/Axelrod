@@ -1,6 +1,5 @@
 package com.sykim.axelrod.hompage;
 
-import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.*;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
@@ -9,8 +8,6 @@ import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
 import com.sykim.axelrod.matching.MatchingService;
 import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -20,8 +17,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -164,9 +159,9 @@ public class HomepageController {
     }
 
     @PostMapping("/Buy")
-    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException, NotEnoughBalanceException {
+    public String buyStockResult(@ModelAttribute TransactionOrder.OrderRequest order, Model model) throws NotAvailableTickerException, NotEnoughBalanceException, AccountDoseNotExistException {
         //TODO: Account Balance 확인
-        accountService.checkAccountBalance(order);
+        accountService.checkOrderPossible(order);
         stockTradeService.isAllowedToMakeOrder(order, TransactionOrder.Type.BUY);
         TransactionOrder newTransactionOrder = stockTradeService.createTransactionOrder(order, TransactionOrder.Type.BUY);
         matchingService.bookStockOrder(newTransactionOrder.getId(), order.playerId(), order.ticker(), TransactionOrder.Type.BUY, order.price(), order.quantity());
@@ -192,25 +187,8 @@ public class HomepageController {
 
     @GetMapping("/stock")
     public String stockDetail(@RequestParam("ticker") String ticker,@RequestParam("userId") Optional<String> userId, Model model) throws IOException, CsvValidationException {
-        List<Stock.History> dataList = new ArrayList<>();
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(
-                Objects.requireNonNull(classLoader.getResource("data/aapl-2.csv").getFile())
-        );
-        FileReader fileReader = new FileReader(file);
-        CSVReader csvReader = new CSVReader(fileReader);
+        List<Stock.History> dataList;
 
-        csvReader.readNext();
-        String[] record;
-        while ((record = csvReader.readNext()) != null) {
-            dataList.add(new Stock.History(record[0]
-                    , Double.parseDouble(record[1])
-                    , Double.parseDouble(record[2])
-                    , Double.parseDouble(record[3])
-                    , Double.parseDouble(record[4])
-                    , Double.parseDouble(record[5])
-                    , Long.parseLong(record[6])));
-        }
         if (ticker.equals("IBM")) {
             dataList = alphaVantageService.getStockData(ticker);
         } else {

@@ -81,17 +81,65 @@
         <p th:text="'Ticker : ' + ${ticker}"></p>
         <p>
             <label for="quantity">Quantity:</label>
-            <input type="number" id="quantity" th:field="*{quantity}" />
+            <input type="number" id="quantity" th:field="*{quantity}" placeholder="0" oninput="checkAccountBalance()" />
         </p>
         <p>
             <label for="price">Price:</label>
-            <input type="text" id="price" th:field="*{price}" />
+            <input type="text" id="price" th:field="*{price}" placeholder="0.0" oninput="checkAccountBalance()" />
         </p>
         <p>
             <input type="submit" value="Submit" />
             <input type="reset" value="Reset" />
         </p>
+        <p id="check" hidden style="color: red">* 계좌 잔액이 부족합니다 *</p>
     </form>
 </div>
+<script th:inlne="javascript">
+
+    var lastPrice = 0;
+    var lastQuantity = 0;
+
+    function checkAccountBalance() {
+        let userId = "[[${userId}]]";
+        let price = document.getElementById("price").value;
+        if (price == "") {
+            price = "0";
+        }
+        let quantity = document.getElementById("quantity").value;
+        if (quantity == "") {
+            quantity = "0";
+        }
+
+        var data = JSON.stringify({
+            playerId: userId,
+            ticker: null,
+            quantity: quantity,
+            price: price
+        });
+
+        console.log(data);
+
+        fetch('/account/check', {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: data
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result) {
+                document.getElementById("check").hidden = true;
+                lastPrice = price;
+                lastQuantity = quantity
+            }
+            else {
+                document.getElementById("check").hidden = false;
+                document.getElementById("price").value = lastPrice;
+                document.getElementById("quantity").value = lastQuantity;
+            }
+        })
+    }
+</script>
 </body>
 </html>
