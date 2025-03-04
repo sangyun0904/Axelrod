@@ -110,10 +110,20 @@ public class AccountService {
     }
 
     @Transactional
-    public boolean checkAccountBalance(TransactionOrder.OrderRequest order) throws NotEnoughBalanceException {
+    public boolean checkOrderPossible(TransactionOrder.OrderRequest order) throws NotEnoughBalanceException, AccountDoseNotExistException {
         List<Account> accountList = accountRepository.findByUsername(order.playerId());
         Double orderPrice = order.price() * order.quantity();
-        if (accountList.get(0).getBalance() >= orderPrice || order.playerId().equals("admin")) return true;
-        else throw new NotEnoughBalanceException("Not enough money in yout account");
+
+        if (accountList.isEmpty()) throw new AccountDoseNotExistException("This player does not have any account.");
+
+        return accountList.get(0).getBalance() >= orderPrice || order.playerId().equals("admin");
+    }
+
+    @Transactional
+    public boolean checkAccountBalance(String accountNum, Double price) throws AccountDoseNotExistException {
+        Optional<Account> account = accountRepository.findByAccountNum(accountNum);
+        if (account.isEmpty()) throw new AccountDoseNotExistException("Account num : " + accountNum + " doesn't exist.");
+
+        return account.get().getBalance() >= price;
     }
 }
