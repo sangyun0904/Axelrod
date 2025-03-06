@@ -12,6 +12,8 @@ import redis.clients.jedis.resps.Tuple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Component
 public class TransactionOrderListComponent {
@@ -20,8 +22,8 @@ public class TransactionOrderListComponent {
 
     private JedisPool jedisPool;
 
-    public List<TransactionOrder> buyOrderList = new ArrayList<>();
-    public List<TransactionOrder> sellOrderList = new ArrayList<>();
+    public SortedSet<TransactionOrder> buyOrderList = new TreeSet<>();
+    public SortedSet<TransactionOrder> sellOrderList = new TreeSet<>();
 
     TransactionOrderListComponent(StockRepository stockRepository, JedisPool jedisPool) {
         this.stockRepository = stockRepository;
@@ -31,8 +33,8 @@ public class TransactionOrderListComponent {
     }
 
     public void reloadOrderData() {
-        List<TransactionOrder> newBuyOrderList = new ArrayList<>();
-        List<TransactionOrder> newSellOrderList = new ArrayList<>();
+        SortedSet<TransactionOrder> newBuyOrderList = new TreeSet<>();
+        SortedSet<TransactionOrder> newSellOrderList = new TreeSet<>();
         List<Stock> stockList = stockRepository.findAll();
 
         for (Stock stock : stockList) {
