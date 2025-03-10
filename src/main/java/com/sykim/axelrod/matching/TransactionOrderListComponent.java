@@ -66,4 +66,19 @@ public class TransactionOrderListComponent {
             sellOrderMapByUserId.get(sellerId).get(ticker).add(new TransactionOrder(null, sellerId, ticker, sellOrder.getQuantity() - quantity, sellOrder.getPrice(), TransactionOrder.Type.SELL));
         }
     }
+
+    public List<TransactionOrder> getUserOrderList(String userId, TransactionOrder.Type orderType) {
+        List<TransactionOrder> orderList = new ArrayList<>();
+        if (orderType == TransactionOrder.Type.BUY && buyOrderMapByUserId.get(userId) != null) {
+            for (SortedSet<TransactionOrder> orders : buyOrderMapByUserId.get(userId).values()) {
+                orderList.addAll(orders);
+            }
+        } else if(sellOrderMapByUserId.get(userId) != null) {
+            for (SortedSet<TransactionOrder> orders : sellOrderMapByUserId.get(userId).values()) {
+                orderList.addAll(orders);
+            }
+        }
+
+        return orderList;
+    }
 }

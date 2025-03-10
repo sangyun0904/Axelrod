@@ -91,6 +91,10 @@ public class HomepageController {
 //        List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
         List<TransactionOrder> buyOrderList = new ArrayList<>();
         List<TransactionOrder> sellOrderList = new ArrayList<>();
+        if (userId != null) {
+            buyOrderList = transactionOrderListComponent.getUserOrderList(userId, TransactionOrder.Type.BUY);
+            sellOrderList = transactionOrderListComponent.getUserOrderList(userId, TransactionOrder.Type.SELL);
+        }
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
