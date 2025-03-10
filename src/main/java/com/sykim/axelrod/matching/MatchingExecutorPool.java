@@ -129,7 +129,7 @@ public class MatchingExecutorPool {
 
             stockTradeService.updateStockPrice(ticker, transactionPrice);
             System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
-//            transactionOrderListComponent.reloadOrderData();
+            transactionOrderListComponent.updateTransaction(ticker, transactionPrice, quantity, sellOrder.userId(), buyOrder.userId());
             System.out.println(Thread.currentThread().getName() + " : " + LocalDateTime.now());
         }
         return null;

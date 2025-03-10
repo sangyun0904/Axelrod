@@ -87,8 +87,10 @@ public class HomepageController {
         // Mac에선 원래 0.7초
         // => order list를 가지고 있는 bean 객체를 따로 생성하여 매번 화면이 랜더링 될때마다 거래 주문 리스트를 전부 긁어오는 시간을 줄임
         // 바뀐후 시간 : Mac 에서 0.1초
-        List<TransactionOrder> buyOrderList = transactionOrderListComponent.buyOrderList;
-        List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
+//        List<TransactionOrder> buyOrderList = transactionOrderListComponent.buyOrderList;
+//        List<TransactionOrder> sellOrderList = transactionOrderListComponent.sellOrderList;
+        List<TransactionOrder> buyOrderList = new ArrayList<>();
+        List<TransactionOrder> sellOrderList = new ArrayList<>();
         model.addAttribute("buyOrderList", buyOrderList.subList(0, Math.min(buyOrderList.size(), 15)));
         model.addAttribute("sellOrderList", sellOrderList.subList(0, Math.min(sellOrderList.size(), 15)));
 
