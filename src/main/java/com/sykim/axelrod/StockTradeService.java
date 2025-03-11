@@ -77,8 +77,16 @@ public class StockTradeService {
         if (stockOrNull.isPresent()) {
             Stock stock = stockOrNull.get();
             TransactionOrder order = new TransactionOrder(null, transactionOrder.playerId(), transactionOrder.ticker(), transactionOrder.quantity(), transactionOrder.price(), type);
-            if (type == TransactionOrder.Type.BUY) transactionOrderListComponent.buyOrderMapByUserId.get(order.getPlayerId()).get(order.getTicker()).add(order);
-            else transactionOrderListComponent.sellOrderMapByUserId.get(order.getPlayerId()).get(order.getTicker()).add(order);
+            if (type == TransactionOrder.Type.BUY) {
+                transactionOrderListComponent.buyOrderMapByUserId.computeIfAbsent(order.getPlayerId(), k -> new HashMap<>());
+                transactionOrderListComponent.buyOrderMapByUserId.get(order.getPlayerId()).computeIfAbsent(order.getTicker(), k -> new TreeSet<>());
+                transactionOrderListComponent.buyOrderMapByUserId.get(order.getPlayerId()).get(order.getTicker()).add(order);
+            }
+            else {
+                transactionOrderListComponent.sellOrderMapByUserId.computeIfAbsent(order.getPlayerId(), k -> new HashMap<>());
+                transactionOrderListComponent.sellOrderMapByUserId.get(order.getPlayerId()).computeIfAbsent(order.getTicker(), k -> new TreeSet<>());
+                transactionOrderListComponent.sellOrderMapByUserId.get(order.getPlayerId()).get(order.getTicker()).add(order);
+            }
 
             return orderRepository.save(order);
         } else {
