@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import com.sykim.axelrod.exceptions.AccountDoseNotExistException;
 import com.sykim.axelrod.exceptions.NotEnoughBalanceException;
+import com.sykim.axelrod.matching.TransactionOrderListComponent;
 import com.sykim.axelrod.model.Account;
 import com.sykim.axelrod.model.Bank;
 import com.sykim.axelrod.model.TransactionOrder;
@@ -26,6 +27,8 @@ public class AccountService {
     private AccountRepository accountRepository;
     @Autowired
     private BankRepository bankRepository;
+    @Autowired
+    private TransactionOrderListComponent transactionOrderListComponent;
 
     public List<Account> getAccountByUsername(String username) {
         return accountRepository.findByUsername(username);
@@ -114,16 +117,41 @@ public class AccountService {
         List<Account> accountList = accountRepository.findByUsername(order.playerId());
         Double orderPrice = order.price() * order.quantity();
 
+        Double remainBalance = accountList.get(0).getBalance();
+        if (transactionOrderListComponent.buyOrderMapByUserId.get(order.playerId()) != null) {
+            for (SortedSet<TransactionOrder> orderSet : transactionOrderListComponent.buyOrderMapByUserId.get(order.playerId()).values()) {
+                for (TransactionOrder remainingOrder : orderSet) {
+                    remainBalance -= remainingOrder.getPrice() * remainingOrder.getQuantity();
+                }
+            }
+        }
+
         if (accountList.isEmpty()) throw new AccountDoseNotExistException("This player does not have any account.");
 
-        return accountList.get(0).getBalance() >= orderPrice || order.playerId().equals("admin");
+        return remainBalance >= orderPrice || order.playerId().equals("admin");
     }
 
     @Transactional
-    public boolean checkAccountBalance(String accountNum, Double price) throws AccountDoseNotExistException {
+    public boolean checkEnoughBalance(String accountNum, Double price) throws AccountDoseNotExistException {
         Optional<Account> account = accountRepository.findByAccountNum(accountNum);
         if (account.isEmpty()) throw new AccountDoseNotExistException("Account num : " + accountNum + " doesn't exist.");
 
         return account.get().getBalance() >= price;
+    }
+
+    @Transactional
+    public Double getRemainBalance(String userId) {
+        Account account = accountRepository.findByUsername(userId).get(0);
+
+        Double remainBalance = account.getBalance();
+        if (transactionOrderListComponent.buyOrderMapByUserId.get(userId) != null) {
+            for (SortedSet<TransactionOrder> orderSet : transactionOrderListComponent.buyOrderMapByUserId.get(userId).values()) {
+                for (TransactionOrder remainingOrder : orderSet) {
+                    remainBalance -= remainingOrder.getPrice() * remainingOrder.getQuantity();
+                }
+            }
+        }
+
+        return remainBalance;
     }
 }

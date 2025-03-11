@@ -104,9 +104,6 @@
     import { candlestickChart } from '/chart.js';
 
     let aapl = [[${chartData}]];
-    console.log("Java data:", aapl);
-    console.log("Timestamp:", Date.now());
-    console.log("Data length:", aapl.length);
 
     const chart = candlestickChart(aapl, {
       yLabel: "↑ Price ($)",
