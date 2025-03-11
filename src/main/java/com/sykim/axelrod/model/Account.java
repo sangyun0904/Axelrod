@@ -26,8 +26,8 @@ public class Account {
     private LocalDateTime updatedAt;
 
     public record CreateAccount(String playerId, String bankName) {}
-
     public record ChangeBalance(String userId, String accountNum, Integer type, Double amount) {}
+    public record RemainBalanceCheck(String userId) {}
 
     public Double changeBalance(Double change) throws NotEnoughBalanceException {
         if (this.balance + change < 0)

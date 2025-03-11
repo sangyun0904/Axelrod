@@ -72,13 +72,14 @@
         }
     </style>
 </head>
-<body>
+<body onload="checkRemainBalance()">
 <div class="container">
     <h1 th:text="${type} + ' Stock Form'"></h1>
     <form action="#" th:action="'/homepage/' + ${type}" th:object="${order}" method="post">
         <input type="hidden" name="playerId" th:value="${userId}" />
         <input type="hidden" name="ticker" th:value="${ticker}" />
         <p th:text="'Ticker : ' + ${ticker}"></p>
+        <p id="remain"></p>
         <p>
             <label for="quantity">Quantity:</label>
             <input type="number" id="quantity" th:field="*{quantity}" placeholder="0" oninput="checkAccountBalance()" />
@@ -117,8 +118,6 @@
             price: price
         });
 
-        console.log(data);
-
         fetch('/account/check', {
             method: "POST",
             headers: {
@@ -138,6 +137,26 @@
                 document.getElementById("price").value = lastPrice;
                 document.getElementById("quantity").value = lastQuantity;
             }
+        })
+    }
+
+    function checkRemainBalance() {
+        let userId = "[[${userId}]]";
+
+        var data = JSON.stringify({
+            userId: userId
+        });
+
+        fetch('/account/remain', {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: data
+        })
+        .then(response => response.json())
+        .then(result => {
+            document.getElementById("remain").innerHTML = "사용 가능한 금액 : " + result;
         })
     }
 </script>
