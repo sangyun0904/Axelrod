@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -273,7 +274,14 @@ public class HomepageController {
     }
 
     @GetMapping("/calendar")
-    public String calendar() {
+    public String calendar(Model model) {
+        List<CalendarEvent> events = List.of(
+                new CalendarEvent(LocalDate.now(), "오늘 회의" ),
+                new CalendarEvent(LocalDate.now().plusDays(2), "배포"),
+                new CalendarEvent(LocalDate.now().plusDays(2), "디자인 검토"),
+                new CalendarEvent(LocalDate.now().withDayOfMonth(1), "월초 정산")
+        );
+        model.addAttribute("events", events);
         return "calendar";
     }
 

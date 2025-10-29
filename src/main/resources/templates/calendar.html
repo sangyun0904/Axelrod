@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
     <title>Vanilla Calendar</title>
@@ -64,9 +64,17 @@
     <div class="days" id="days"></div>
 </div>
 
-<script>
+<script th:inline="javascript" type="module">
     // 요일: 일(0)~토(6). 필요 시 월요일 시작으로 바꿀 수 있음.
     const WEEKDAYS_SUN_FIRST = ["일","월","화","수","목","금","토"];
+
+    const EVENTS = [[${events}]];
+    const eventsByDate = new Map();
+    for (const ev of (EVENTS ?? [])) {
+        const key = ev.date;
+        eventsByDate.set(key, ev);
+    };
+    console.log(EVENTS);
 
     const now = new Date();
     let currentYear = now.getFullYear();
@@ -125,10 +133,12 @@
           year === now.getFullYear();
         if (isToday) cell.classList.add("today");
 
+        const isoDate = (y,m,d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
         const plans = document.createElement("div");
         plans.className = "plans";
-        if (d === 1) {
-            plans.textContent = "첫째날"
+        if (eventsByDate.has(isoDate(year, month, d))) {
+            plans.textContent = eventsByDate.get(isoDate(year, month, d)).title;
         }
         cell.appendChild(plans);
 
