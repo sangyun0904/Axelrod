@@ -43,8 +43,6 @@ public class HomepageController {
     @Autowired
     private NewsletterService newsletterService;
 
-    @Value("${alphavantage.key}")
-    private String ALPHA_VANTAGE_API_KEY;
     private final int PAGE_SIZE=15;
 
     @GetMapping("")
@@ -272,6 +270,11 @@ public class HomepageController {
         }
 
         return pageNumbers;
+    }
+
+    @GetMapping("/calendar")
+    public String calendar() {
+        return "calendar";
     }
 
 }

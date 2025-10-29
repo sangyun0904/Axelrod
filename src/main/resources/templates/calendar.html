@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <title>Vanilla Calendar</title>
+    <style>
+        :root{
+          --bg:#f7f7f8; --fg:#111; --muted:#9aa1a7; --pri:#2563eb; --accent:#e5edff; --border:#e5e7eb;
+          --today:#ffedd5; --selected:#dbeafe;
+        }
+        *{box-sizing:border-box}
+        body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--fg);}
+        .calendar{max-width: 2400px; margin: 0px auto; background:#fff; border:1px solid var(--border); border-radius:0px; box-shadow:0 8px 24px rgba(0,0,0,.05); overflow:hidden}
+        .cal-header{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border);}
+        .cal-header h2{margin:0; font-size:18px; font-weight:600}
+        .cal-nav{display:flex; gap:8px}
+        .btn{padding:8px 10px; border:1px solid var(--border); background:#fff; border-radius:10px; cursor:pointer}
+        .btn:hover{background:#fafafa}
+        .weekdays, .days{display:grid; grid-template-columns: repeat(7, 1fr);}
+        .weekdays{padding:8px 8px 0; gap:8px}
+        .weekdays div{text-align:center; font-size:12px; color:var(--muted); padding:6px 0}
+        .days{padding:8px; gap:8px 8px}
+        /* 정사각형 칸 */
+        .cell{
+          border:1px solid var(--border);
+          border-radius:0px;
+          position:relative;
+          aspect-ratio: 3 / 2;  /* 정사각형 */
+          background:#fff;
+          overflow:hidden;
+        }
+        .cell.empty{background:#fafafa}
+        .cell .num{
+          position:absolute; top:8px; right:10px; font-size:12px; color:#475569;
+        }
+        .cell.today{outline:2px solid #f59e0b40; background:var(--today);}
+        .cell.weekend .num{color:#dc2626}
+        .cell:hover{box-shadow: inset 0 0 0 2px var(--accent)}
+        .cell.selected{background:var(--selected); box-shadow: inset 0 0 0 2px var(--pri)}
+        /* 칸 내부 일정 텍스트 자리 */
+        .cell .plans{position:absolute; right:10px; bottom:10px; display:flex}
+        /* 칸 내부 일정 점/컨텐츠 자리 */
+        .cell .dots{position:absolute; left:10px; bottom:10px; display:flex; gap:6px}
+        .dot{width:6px; height:6px; border-radius:50%; background:#94a3b8}
+        .dot.blue{background:#3b82f6} .dot.green{background:#22c55e} .dot.red{background:#ef4444}
+        /* 반응형 */
+        @media (max-width:560px){
+          .calendar{margin:12px}
+        }
+    </style>
+</head>
+<body>
+<div class="calendar" id="calendar">
+    <div class="cal-header">
+        <div class="cal-nav">
+            <button class="btn" id="prev">◀ 이전</button>
+            <button class="btn" id="today">오늘</button>
+            <button class="btn" id="next">다음 ▶</button>
+        </div>
+        <h2 id="month-year">2025-10</h2>
+    </div>
+
+    <div class="weekdays" id="weekdays"></div>
+    <div class="days" id="days"></div>
+</div>
+
+<script>
+    // 요일: 일(0)~토(6). 필요 시 월요일 시작으로 바꿀 수 있음.
+    const WEEKDAYS_SUN_FIRST = ["일","월","화","수","목","금","토"];
+
+    const now = new Date();
+    let currentYear = now.getFullYear();
+    let currentMonth = now.getMonth(); // 0-11
+    let selected = null; // 선택된 날짜(ISO)
+
+    // 주말 판별
+    const isWeekend = (y,m,d) => {
+      const day = new Date(y, m, d).getDay();
+      return (day === 0 || day === 6);
+    };
+
+    // 42칸(6주) 채우기용 렌더
+    function renderCalendar(year, month){
+      const monthYear = document.getElementById("month-year");
+      const daysEl = document.getElementById("days");
+      const wdEl = document.getElementById("weekdays");
+      daysEl.innerHTML = "";
+      wdEl.innerHTML = "";
+
+      // 요일 헤더
+      WEEKDAYS_SUN_FIRST.forEach(d => {
+        const div = document.createElement("div");
+        div.textContent = d;
+        wdEl.appendChild(div);
+      });
+
+      monthYear.textContent = `${year}년 ${String(month+1).padStart(2,'0')}월`;
+
+      const firstDay = new Date(year, month, 1);
+      const firstDow = firstDay.getDay(); // 0-6 (일~토)
+      const lastDate = new Date(year, month+1, 0).getDate();
+
+      // 앞쪽 빈칸
+      for(let i=0; i<firstDow; i++){
+        const empty = document.createElement("div");
+        empty.className = "cell empty";
+        daysEl.appendChild(empty);
+      }
+
+      // 실제 날짜 칸
+      for(let d=1; d<=lastDate; d++){
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        if (isWeekend(year, month, d)) cell.classList.add("weekend");
+
+        const num = document.createElement("div");
+        num.className = "num";
+        num.textContent = d;
+        cell.appendChild(num);
+
+        // 오늘 표시
+        const isToday =
+          d === now.getDate() &&
+          month === now.getMonth() &&
+          year === now.getFullYear();
+        if (isToday) cell.classList.add("today");
+
+        const plans = document.createElement("div");
+        plans.className = "plans";
+        if (d === 1) {
+            plans.textContent = "첫째날"
+        }
+        cell.appendChild(plans);
+
+        // 샘플: 일정 점(원한다면 실제 데이터로 바인딩)
+        const dots = document.createElement("div");
+        dots.className = "dots";
+        // 예시로 토/일에 임의로 점 추가
+        if (isWeekend(year, month, d)) {
+          dots.innerHTML = `<span class="dot blue"></span><span class="dot red"></span>`;
+        }
+        cell.appendChild(dots);
+
+        // 선택 로직
+        const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if (selected === iso) cell.classList.add("selected");
+        cell.dataset.date = iso;
+
+        cell.addEventListener("click", () => {
+          selected = iso;
+          // 전체에서 selected 제거 후 현재 칸만 selected
+          document.querySelectorAll(".cell.selected").forEach(el => el.classList.remove("selected"));
+          cell.classList.add("selected");
+          // 여기에 날짜 선택 시 팝업/패널 로직 연결 가능
+          // console.log("selected", iso);
+        });
+
+        daysEl.appendChild(cell);
+      }
+
+      // 뒤쪽 빈칸(총 42칸 맞추기)
+      const totalCells = firstDow + lastDate;
+      const trailing = 42 - totalCells;
+      for(let i=0; i<trailing; i++){
+        const empty = document.createElement("div");
+        empty.className = "cell empty";
+        daysEl.appendChild(empty);
+      }
+    }
+
+    // 네비게이션
+    document.getElementById("prev").onclick = () => {
+      currentMonth--; if (currentMonth < 0){ currentMonth = 11; currentYear--; }
+      renderCalendar(currentYear, currentMonth);
+    };
+    document.getElementById("next").onclick = () => {
+      currentMonth++; if (currentMonth > 11){ currentMonth = 0; currentYear++; }
+      renderCalendar(currentYear, currentMonth);
+    };
+    document.getElementById("today").onclick = () => {
+      currentYear = now.getFullYear(); currentMonth = now.getMonth();
+      renderCalendar(currentYear, currentMonth);
+    };
+
+    renderCalendar(currentYear, currentMonth);
+</script>
+</body>
+</html>
